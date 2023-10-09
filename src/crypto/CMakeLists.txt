@@ -1,0 +1,70 @@
+file(GLOB_RECURSE SOURCES src/*.c src/*.cpp)
+
+add_library(ub_crypto INTERFACE)
+add_library(UB::Crypto ALIAS ub_crypto)
+
+target_sources(ub_crypto INTERFACE ${SOURCES})
+target_include_directories(ub_crypto INTERFACE include)
+
+if (${BUILD_TESTS})
+    set(GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/test-generated")
+
+    file(MAKE_DIRECTORY "${GENERATED_DIR}")
+    set(GENERATED_FILES "")
+
+    function(run_test_generator FILE SCRIPT)
+        file(REAL_PATH "${FILE}" ABS_FILE BASE_DIRECTORY "${GENERATED_DIR}")
+        file(REAL_PATH "${SCRIPT}" ABS_SCRIPT BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/test")
+
+        add_custom_command(
+                OUTPUT "${ABS_FILE}"
+                COMMAND "${CMAKE_COMMAND}" -E env
+                    "PYTHONPATH=${TEST_PYTHON_LIB}"
+                    python3 -B "${ABS_SCRIPT}" ${ARGN} "${ABS_FILE}"
+                WORKING_DIRECTORY "${GENERATED_DIR}"
+                DEPENDS "${ABS_SCRIPT}" ${TEST_PYTHON_FILES}
+                COMMENT "Generating (src/crypto/test) ${FILE}"
+        )
+
+        set(NEXT_GENERATED_FILES "${GENERATED_FILES}")
+        list(APPEND NEXT_GENERATED_FILES "${ABS_FILE}")
+        set(GENERATED_FILES "${NEXT_GENERATED_FILES}" PARENT_SCOPE)
+    endfunction()
+
+    function(add_crypto_test FILE)
+        get_filename_component(NAME "${FILE}" NAME_WLE)
+        string(REGEX REPLACE "[^a-z_0-9]+" "_" NAME "${NAME}")
+        string(PREPEND NAME "test_crypto_")
+
+        add_executable("${NAME}" "${CMAKE_CURRENT_SOURCE_DIR}/test/${FILE}")
+
+        foreach (F IN LISTS ARGN)
+            file(REAL_PATH "${F}" AF BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/test")
+            target_sources("${NAME}" PRIVATE "${AF}")
+        endforeach ()
+
+        target_link_libraries("${NAME}" PRIVATE ub_crypto_tests)
+
+        add_test(NAME "${NAME}" COMMAND "${NAME}" WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+    endfunction()
+
+    run_test_generator(sha256_test_data.cpp hash/hash_test_gen.py sha256)
+    run_test_generator(sha512_test_data.cpp hash/hash_test_gen.py sha512)
+    run_test_generator(f25519_test_data.cpp c25519/f25519_test_gen.py)
+    run_test_generator(ed25519_test_data.cpp c25519/ed25519_test_gen.py)
+    run_test_generator(fprime_test_data.cpp c25519/fprime_test_gen.py)
+    run_test_generator(eddsa_test_data.cpp c25519/eddsa_test_gen.py)
+
+    # Intermediate static library to avoid repeated compilations when building a lot of tests
+    add_library(ub_crypto_tests STATIC EXCLUDE_FROM_ALL "${GENERATED_FILES}" test/test_utils.cpp)
+    target_include_directories(ub_crypto_tests PUBLIC src test include)
+    target_link_libraries(ub_crypto_tests PRIVATE ub_crypto)
+    target_compile_options(ub_crypto_tests PUBLIC -O3)
+
+    add_crypto_test(hash/sha256.cpp)
+    add_crypto_test(hash/sha512.cpp)
+    add_crypto_test(c25519/f25519.cpp)
+    add_crypto_test(c25519/ed25519.cpp)
+    add_crypto_test(c25519/fprime.cpp)
+    add_crypto_test(c25519/eddsa.cpp)
+endif ()
