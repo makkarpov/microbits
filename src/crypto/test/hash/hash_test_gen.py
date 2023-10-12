@@ -1,5 +1,5 @@
 import hashlib
-from test_utils import print_buffer
+from testgen.utils import print_buffer
 import sys
 
 

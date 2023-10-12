@@ -1,6 +1,6 @@
 import sys
 import itertools
-from test_utils import random_number, number_to_c
+from testgen.utils import random_number, number_to_c
 
 
 def random_sq(q: int) -> int:

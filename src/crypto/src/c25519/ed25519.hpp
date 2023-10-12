@@ -23,6 +23,9 @@ namespace ub::crypto::impl {
         /** Convert a point from projected representation to affine coordinates */
         void unproject();
 
+        /** Test whether two points are equal */
+        bool equals(const ed25519_pt &other) const;
+
         /** Store a compressed representation of this point in buffer */
         void store(uint8_t *buffer);
 

@@ -2,7 +2,7 @@ import sys
 from typing import NamedTuple, Union
 from Crypto.Hash import SHA512
 from Crypto.Signature import eddsa
-from test_utils import random_bytes, random_number, bytes_to_c, print_buffer
+from testgen.utils import random_bytes, random_number, bytes_to_c, print_buffer
 
 
 class SignTest(NamedTuple):
@@ -50,7 +50,12 @@ def generate_verify_test() -> VerifyTest:
 
 
 def write_test(out, t: Union[SignTest, VerifyTest], last: bool):
-    out.write('    .key = %s,\n' % bytes_to_c(t.key))
+    if isinstance(t, SignTest):
+        key = t.key + to_public_key(t.key)
+        out.write('    .key = %s,\n' % bytes_to_c(key))
+    else:
+        out.write('    .key = %s,\n' % bytes_to_c(t.key))
+
     out.write('    .len = %s,\n' % ('MSG_LEN_ED25519ph' if t.hash else str(len(t.data))))
     out.write('    .msg = {\n')
     print_buffer(t.data, out, '      ')

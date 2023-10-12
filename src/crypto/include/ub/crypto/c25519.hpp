@@ -18,7 +18,8 @@ namespace ub::crypto {
         /**
          * Sign a message with Ed25519.
          *
-         * @param key       Ed25519 private key buffer (of length `KEY_SIZE`)
+         * @param key       Buffer with concatenation of Ed25519 private key with it's matching public key (giving total
+         *                  length of `2*KEYSIZE` bytes). Use `toPublic` function to derive public key from private.
          * @param signature Output signature buffer (of length `SIGNATURE_SIZE`)
          * @param message   Message buffer
          * @param length    Length of message
@@ -28,7 +29,8 @@ namespace ub::crypto {
         /**
          * Sign a SHA-512 hash of message with Ed25519ph.
          *
-         * @param key       Ed25519 private key buffer (of length `KEY_SIZE`)
+         * @param key       Buffer with concatenation of Ed25519 private key with it's matching public key (giving total
+         *                  length of `2*KEYSIZE` bytes). Use `toPublic` function to derive public key from private.
          * @param signature Output signature buffer (of length `SIGNATURE_SIZE`)
          * @param hash      Message hash (of length `ub::crypto::sha512::OUTPUT`)
          */

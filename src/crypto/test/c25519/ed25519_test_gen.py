@@ -1,7 +1,7 @@
 import sys
 import itertools
 from typing import Tuple, Optional
-from test_utils import random_number, number_to_c, bytes_to_c
+from testgen.utils import random_number, number_to_c, bytes_to_c
 
 
 # Copied from reference implementation at https://ed25519.cr.yp.to/python/ed25519.py

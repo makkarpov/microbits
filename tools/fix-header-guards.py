@@ -117,9 +117,9 @@ def scan_dir(s_dir: str, module_prefix: List[str]):
 
 def run():
     ub_root = path.realpath(path.join(path.dirname(__file__), '..'))
-    ub_src = path.realpath(path.join(ub_root, 'src'))
 
-    scan_dir(ub_src, [])
+    scan_dir(path.join(ub_root, 'src'), [])
+    process_src_dir(path.join(ub_root, 'tools', 'test', 'device_lib'), 'DEVICE', 'TEST')
 
 
 if __name__ == '__main__':

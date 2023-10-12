@@ -8,11 +8,6 @@ static constexpr uint256_t ed25519_d {
     0x98, 0xe8, 0x79, 0x77, 0x79, 0x40, 0xc7, 0x8c, 0x73, 0xfe, 0x6f, 0x2b, 0xee, 0x6c, 0x03, 0x52
 };
 
-static constexpr uint8_t base_x[32] {
-    0x1A, 0xD5, 0x25, 0x8F, 0x60, 0x2D, 0x56, 0xC9, 0xB2, 0xA7, 0x25, 0x95, 0x60, 0xC7, 0x2C, 0x69,
-    0x5C, 0xDC, 0xD6, 0xFD, 0x31, 0xE2, 0xA4, 0xC0, 0xFE, 0x53, 0x6E, 0xCD, 0xD3, 0x36, 0x69, 0x21
-};
-
 void ed25519_pt::project() {
     z = 1;
     F25519::mul(t, x, y);
@@ -20,8 +15,10 @@ void ed25519_pt::project() {
 
 bool ed25519_pt::load(const uint8_t *buffer) {
     // Unpack y
-    std::memcpy(y.u8, buffer, uint256_t::N_U8);
-    y.u8[31] &= 0x7F;
+    if (y.u8 != buffer) {
+        std::memcpy(y.u8, buffer, uint256_t::N_U8);
+        y.u8[31] &= 0x7F;
+    }
 
     uint256_t a, b, c;
     z = 1;  // Use Z as temporary location to store 1
@@ -97,56 +94,58 @@ void ed25519_pt::destroy() {
 }
 
 void ed25519_pt::loadBase() {
-    std::memcpy(x.u8, base_x, uint256_t::N_U8);
-
     // y = 0x6666....6658
     std::memset(y.u8, 0x66, uint256_t::N_U8);
     y.u8[0] = 0x58;
 
-    z = 1;
-    F25519::mul(t, x, y);
+    load(y.u8);
+}
+
+bool ed25519_pt::equals(const ed25519_pt &other) const {
+    uint256_t u, v;
+
+    F25519::mul(u, x, other.z);
+    F25519::mul(v, other.x, z);
+    bool r = u == v;
+
+    F25519::mul(u, y, other.z);
+    F25519::mul(v, other.y, z);
+    return r & (u == v);
 }
 
 void ED25519::add(ed25519_pt &r, const ed25519_pt &p1, const ed25519_pt &p2) {
-    uint256_t a, b, c, d, e, f, g, h;
+    uint256_t t[8]; // {0:a, 1:b, 2:c, 3:d, 4:e, 5:f, 6:g, 7:h}
 
     // A = (y1-x1)(y2-x2)
-    F25519::sub(c, p1.y, p1.x);
-    F25519::sub(d, p2.y, p2.x);
-    F25519::mul(a, c, d);
+    F25519::sub(t[2], p1.y, p1.x);
+    F25519::sub(t[3], p2.y, p2.x);
+    F25519::mul(t[0], t[2], t[3]);
 
     // B = (y1+x1)(y2+x2)
-    F25519::add(c, p1.y, p1.x);
-    F25519::add(d, p2.y, p2.x);
-    F25519::mul(b, c, d);
+    F25519::add(t[2], p1.y, p1.x);
+    F25519::add(t[3], p2.y, p2.x);
+    F25519::mul(t[1], t[2], t[3]);
 
     // C = T1 * 2 * d * T2
-    F25519::mul(d, p1.t, p2.t);
-    F25519::mul(c, d, ed25519_d);
-    F25519::add(c, c, c);
+    F25519::mul(t[3], p1.t, p2.t);
+    F25519::mul(t[2], t[3], ed25519_d);
+    F25519::add(t[2], t[2], t[2]);
 
     // D = Z1 * 2 * Z2
-    F25519::mul(d, p1.z, p2.z);
-    F25519::add(d, d, d);
+    F25519::mul(t[3], p1.z, p2.z);
+    F25519::add(t[3], t[3], t[3]);
 
-    F25519::sub(e, b, a); // E = B - A
-    F25519::sub(f, d, c); // F = D - C
-    F25519::add(g, d, c); // G = D + C
-    F25519::add(h, b, a); // H = B + A
+    F25519::sub(t[4], t[1], t[0]); // E = B - A
+    F25519::sub(t[5], t[3], t[2]); // F = D - C
+    F25519::add(t[6], t[3], t[2]); // G = D + C
+    F25519::add(t[7], t[1], t[0]); // H = B + A
 
-    F25519::mul(r.x, e, f); // X3 = E F
-    F25519::mul(r.y, g, h); // Y3 = G H
-    F25519::mul(r.t, e, h); // T3 = E H
-    F25519::mul(r.z, f, g); // Z3 = F G
+    F25519::mul(r.x, t[4], t[5]); // X3 = E F
+    F25519::mul(r.y, t[6], t[7]); // Y3 = G H
+    F25519::mul(r.t, t[4], t[7]); // T3 = E H
+    F25519::mul(r.z, t[5], t[6]); // Z3 = F G
 
-    a.destroy();
-    b.destroy();
-    c.destroy();
-    d.destroy();
-    e.destroy();
-    f.destroy();
-    g.destroy();
-    h.destroy();
+    secureZero(t, sizeof(t));
 }
 
 void ED25519::mul(ed25519_pt &r, const ed25519_pt &x, const uint256_t &k) {

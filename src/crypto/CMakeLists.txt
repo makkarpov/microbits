@@ -6,7 +6,7 @@ add_library(UB::Crypto ALIAS ub_crypto)
 target_sources(ub_crypto INTERFACE ${SOURCES})
 target_include_directories(ub_crypto INTERFACE include)
 
-if (${BUILD_TESTS})
+if ("${ENABLE_TESTING}")
     set(GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/test-generated")
 
     file(MAKE_DIRECTORY "${GENERATED_DIR}")
@@ -67,4 +67,40 @@ if (${BUILD_TESTS})
     add_crypto_test(c25519/ed25519.cpp)
     add_crypto_test(c25519/fprime.cpp)
     add_crypto_test(c25519/eddsa.cpp)
+endif ()
+
+if ("${ENABLE_DEVICE_TESTING}")
+    add_device_test(
+            NAME        crypto_eddsa_verify_Os
+            SOURCES     test/device/eddsa_verify.cpp
+            RUNNER      test/device/eddsa_runner.py verify
+            LIBRARIES   ub_crypto
+            CC_FLAGS    -Os -flto
+            LD_FLAGS    -flto
+    )
+
+    add_device_test(
+            NAME        crypto_eddsa_verify_O3
+            SOURCES     test/device/eddsa_verify.cpp
+            RUNNER      test/device/eddsa_runner.py verify
+            LIBRARIES   ub_crypto
+            CC_FLAGS    "-O3"
+    )
+
+    add_device_test(
+            NAME        crypto_eddsa_sign_Os
+            SOURCES     test/device/eddsa_sign.cpp
+            RUNNER      test/device/eddsa_runner.py sign
+            LIBRARIES   ub_crypto
+            CC_FLAGS    -Os -flto
+            LD_FLAGS    -flto
+    )
+
+    add_device_test(
+            NAME        crypto_eddsa_sign_O3
+            SOURCES     test/device/eddsa_sign.cpp
+            RUNNER      test/device/eddsa_runner.py sign
+            LIBRARIES   ub_crypto
+            CC_FLAGS    "-O3"
+    )
 endif ()

@@ -32,7 +32,7 @@ namespace ub::crypto::impl {
         /** Compute `r = a * b`. `r` must not point to `a` or `b` */
         void mul(uint256_t &r, const uint256_t &a, const uint256_t &b);
 
-        /** Compute `r = a * b`, where `b` is a 24-bit integer */
+        /** Compute `r = a * b`, where `b` is a 32-bit integer */
         void mul_u24(uint256_t &r, const uint256_t &a, uint32_t b);
 
         /** Compute `r = x^-1 mod p`. `r` must not point to `x` */

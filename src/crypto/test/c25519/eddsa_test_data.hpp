@@ -14,7 +14,7 @@ struct eddsa_public_key_test {
 };
 
 struct eddsa_sign_test {
-    uint8_t key[32];    //! Private key
+    uint8_t key[64];    //! Private key + public key
     size_t  len;        //! Message length and selector for Ed25519ph mode
     uint8_t msg[256];   //! Message
     uint8_t sig[64];    //! Valid signature

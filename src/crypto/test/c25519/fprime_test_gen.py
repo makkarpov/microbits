@@ -1,7 +1,7 @@
 from typing import NamedTuple
 import sys
 
-from test_utils import random_number, number_to_c, print_buffer
+from testgen.utils import random_number, number_to_c, print_buffer
 
 
 class LoadTest(NamedTuple):
