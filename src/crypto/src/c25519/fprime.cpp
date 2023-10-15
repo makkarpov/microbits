@@ -6,9 +6,8 @@ using namespace ub::crypto::impl;
 
 static void fp_raw_add(uint256_t &x, const uint256_t &p) {
     uint16_t c = 0;
-    int i;
 
-    for (i = 0; i < uint256_t::N_U8; i++) {
+    for (size_t i = 0; i < uint256_t::N_U8; i++) {
         c += (uint16_t) x.u8[i] + (uint16_t) p.u8[i];
         x.u8[i] = c;
         c >>= 8;
@@ -18,9 +17,8 @@ static void fp_raw_add(uint256_t &x, const uint256_t &p) {
 static void fp_raw_try_sub(uint256_t &x, const uint256_t &p) {
     uint256_t minusP;
     uint32_t c = 0;
-    int i;
 
-    for (i = 0; i < uint256_t::N_U16; i++) {
+    for (size_t i = 0; i < uint256_t::N_U16; i++) {
         c = (uint32_t) x.u16[i] - (uint32_t) p.u16[i] - c;
         minusP.u16[i] = c;
         c = (c >> 16) & 1;
@@ -50,9 +48,8 @@ static int fp_prime_msb(const uint256_t &p) {
 /* Warning: this function may be variable-time in the argument n */
 static void fp_shift_n_bits(uint256_t &x, int n) {
     uint32_t c = 0;
-    int i;
 
-    for (i = 0; i < uint256_t::N_U16; i++) {
+    for (size_t i = 0; i < uint256_t::N_U16; i++) {
         c |= (uint32_t) x.u16[i] << n;
         x.u16[i] = c;
         c >>= 16;
@@ -94,7 +91,7 @@ void Fp::mul(uint256_t &r, const uint256_t &a, const uint256_t &b, const uint256
     uint256_t plusA;
     std::memset(r.u8, 0, uint256_t::N_U8);
 
-    for (int i = fp_prime_msb(m); i >= 0; i--) {
+    for (int32_t i = fp_prime_msb(m); i >= 0; i--) {
         uint8_t bit = (b.u8[i >> 3] >> (i & 7)) & 1;
 
         fp_shift_n_bits(r, 1);

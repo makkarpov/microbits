@@ -4,4 +4,8 @@ __pycache__
 cmake-build-*
 .idea
 
+# Directory for local testing:
 playground
+
+# Special prefix for local testing files:
+_LL_*

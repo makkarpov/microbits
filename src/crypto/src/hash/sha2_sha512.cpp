@@ -90,8 +90,12 @@ void sha512::processBlock() {
     }
 
     for (uint32_t i = W_BLOCK; i < W_ROUND; i++) {
-        uint64_t s0 = ROT(w[i - 15], 1) ^ ROT(w[i - 15], 8) ^ (w[i - 15] >> 7);
-        uint64_t s1 = ROT(w[i - 2], 19) ^ ROT(w[i - 2], 61) ^ (w[i - 2] >> 6);
+        uint64_t w0 = w[i - 15];
+        uint64_t s0 = ROT(w0, 1) ^ ROT(w0, 8) ^ (w0 >> 7);
+
+        uint64_t w1 = w[i - 2];
+        uint64_t s1 = ROT(w1, 19) ^ ROT(w1, 61) ^ (w1 >> 6);
+
         w[i] = w[i - 16] + s0 + w[i - 7] + s1;
     }
 

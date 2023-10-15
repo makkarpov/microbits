@@ -53,7 +53,7 @@ class _TestEnvironmentImpl(TestEnvironment):
                     data = data.to_bytes(sym.size, 'little', signed=True)
 
             if len(data) > sym.size:
-                raise ValueError('written data is bigger than symbol %s: %d > %d' % (sym.name, len(data), sym.size))
+                raise ValueError('written data is bigger than symbol \'%s\': %d > %d' % (sym.name, len(data), sym.size))
         else:
             addr = int(location)
             if not isinstance(data, bytes):

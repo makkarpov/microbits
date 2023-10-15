@@ -44,12 +44,17 @@ if ("${ENABLE_TESTING}")
         endforeach ()
 
         target_link_libraries("${NAME}" PRIVATE ub_crypto_tests)
+        target_compile_options("${NAME}" PRIVATE -Wall -Wextra)
 
         add_test(NAME "${NAME}" COMMAND "${NAME}" WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
     endfunction()
 
     run_test_generator(sha256_test_data.cpp hash/hash_test_gen.py sha256)
     run_test_generator(sha512_test_data.cpp hash/hash_test_gen.py sha512)
+    run_test_generator(sha3_256_test_data.cpp hash/hash_test_gen.py sha3_256)
+    run_test_generator(sha3_512_test_data.cpp hash/hash_test_gen.py sha3_512)
+    run_test_generator(shake128_test_data.cpp hash/hash_test_gen.py shake_128)
+    run_test_generator(shake256_test_data.cpp hash/hash_test_gen.py shake_256)
     run_test_generator(f25519_test_data.cpp c25519/f25519_test_gen.py)
     run_test_generator(ed25519_test_data.cpp c25519/ed25519_test_gen.py)
     run_test_generator(fprime_test_data.cpp c25519/fprime_test_gen.py)
@@ -61,8 +66,10 @@ if ("${ENABLE_TESTING}")
     target_link_libraries(ub_crypto_tests PRIVATE ub_crypto)
     target_compile_options(ub_crypto_tests PUBLIC -O3)
 
-    add_crypto_test(hash/sha256.cpp)
-    add_crypto_test(hash/sha512.cpp)
+    add_crypto_test(hash/sha2_sha256.cpp)
+    add_crypto_test(hash/sha2_sha512.cpp)
+    add_crypto_test(hash/sha3_sha3.cpp)
+    add_crypto_test(hash/sha3_shake.cpp)
     add_crypto_test(c25519/f25519.cpp)
     add_crypto_test(c25519/ed25519.cpp)
     add_crypto_test(c25519/fprime.cpp)
@@ -70,37 +77,47 @@ if ("${ENABLE_TESTING}")
 endif ()
 
 if ("${ENABLE_DEVICE_TESTING}")
+    set(COMMON_ARGS "LIBRARIES;ub_crypto;CC_FLAGS;-Os;-Wall;-Wextra")
+
     add_device_test(
             NAME        crypto_eddsa_verify_Os
             SOURCES     test/device/eddsa_verify.cpp
             RUNNER      test/device/eddsa_runner.py verify
-            LIBRARIES   ub_crypto
-            CC_FLAGS    -Os -flto
-            LD_FLAGS    -flto
-    )
-
-    add_device_test(
-            NAME        crypto_eddsa_verify_O3
-            SOURCES     test/device/eddsa_verify.cpp
-            RUNNER      test/device/eddsa_runner.py verify
-            LIBRARIES   ub_crypto
-            CC_FLAGS    "-O3"
+            ${COMMON_ARGS}
     )
 
     add_device_test(
             NAME        crypto_eddsa_sign_Os
             SOURCES     test/device/eddsa_sign.cpp
             RUNNER      test/device/eddsa_runner.py sign
-            LIBRARIES   ub_crypto
-            CC_FLAGS    -Os -flto
-            LD_FLAGS    -flto
+            ${COMMON_ARGS}
     )
 
     add_device_test(
-            NAME        crypto_eddsa_sign_O3
-            SOURCES     test/device/eddsa_sign.cpp
-            RUNNER      test/device/eddsa_runner.py sign
-            LIBRARIES   ub_crypto
-            CC_FLAGS    "-O3"
+            NAME        crypto_sha2_sha256_Os
+            SOURCES     test/device/sha2_sha256.cpp
+            RUNNER      test/device/hash_runner.py sha256
+            ${COMMON_ARGS}
+    )
+
+    add_device_test(
+            NAME        crypto_sha2_sha512_Os
+            SOURCES     test/device/sha2_sha512.cpp
+            RUNNER      test/device/hash_runner.py sha512
+            ${COMMON_ARGS}
+    )
+
+    add_device_test(
+            NAME        crypto_sha3_shake256_Os
+            SOURCES     test/device/sha3_shake256.cpp
+            RUNNER      test/device/hash_runner.py shake_256
+            ${COMMON_ARGS}
+    )
+
+    add_device_test(
+            NAME        crypto_sha3_sha256_Os
+            SOURCES     test/device/sha3_sha256.cpp
+            RUNNER      test/device/hash_runner.py sha3_256
+            ${COMMON_ARGS}
     )
 endif ()

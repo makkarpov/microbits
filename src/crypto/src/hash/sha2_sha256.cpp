@@ -27,7 +27,7 @@ const uint32_t sha256::roundConstants[] = {
 };
 
 sha256::sha256(): m_block {}, m_state {} {
-    memcpy(m_state, initialState, sizeof(initialState));
+    std::memcpy(m_state, initialState, sizeof(initialState));
     m_totalBytes = 0;
 }
 
@@ -35,7 +35,7 @@ void sha256::reset() {
     secureZero(m_block, sizeof(m_block));
     secureZero(m_state, sizeof(m_state));
     secureZero(&m_totalBytes, sizeof(m_totalBytes));
-    memcpy(m_state, initialState, sizeof(initialState));
+    std::memcpy(m_state, initialState, sizeof(initialState));
 }
 
 void sha256::update(const uint8_t *data, size_t length) {
@@ -43,7 +43,7 @@ void sha256::update(const uint8_t *data, size_t length) {
         uint32_t used = m_totalBytes & (BLOCK - 1);
         uint32_t len = std::min(length, (size_t) (BLOCK - used));
 
-        memcpy(m_block + used, data, len);
+        std::memcpy(m_block + used, data, len);
 
         data += len;
         length -= len;

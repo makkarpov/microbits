@@ -7,8 +7,9 @@
 #include <cstring>
 
 struct hash_test_sample {
-    size_t        length;
-    const uint8_t *digest;
+    size_t  length;
+    uint8_t digest[512];
+    size_t  digestLen;
 };
 
 extern const uint8_t sha256_buffer[];
@@ -16,6 +17,18 @@ extern const hash_test_sample * const sha256_samples[];
 
 extern const uint8_t sha512_buffer[];
 extern const hash_test_sample * const sha512_samples[];
+
+extern const uint8_t sha3_256_buffer[];
+extern const hash_test_sample * const sha3_256_samples[];
+
+extern const uint8_t sha3_512_buffer[];
+extern const hash_test_sample * const sha3_512_samples[];
+
+extern const uint8_t shake_128_buffer[];
+extern const hash_test_sample * const shake_128_samples[];
+
+extern const uint8_t shake_256_buffer[];
+extern const hash_test_sample * const shake_256_samples[];
 
 template <typename hash>
 int runHashTests(const char *name, const uint8_t *buffer, const hash_test_sample * const * samples) {

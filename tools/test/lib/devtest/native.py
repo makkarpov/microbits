@@ -111,7 +111,7 @@ class TargetManager:
 
     def run_executable(self):
         self.link.write_mem(self.ram_reserved_ptr, b'\x55\xBE')         # 'bkpt' instruction
-        self.link.write_reg('MSP', self.ram_stack_ptr + self.ram_stack_sz)
+        self.link.write_reg('SP', self.ram_stack_ptr + self.ram_stack_sz)
         self.link.write_reg('LR', self.ram_reserved_ptr | 1)            # set thumb bit (to handle 'bx lr')
         self.link.write_reg('PC', self.exe_entry_point & 0xFFFFFFFE)    # load without thumb bit
 
