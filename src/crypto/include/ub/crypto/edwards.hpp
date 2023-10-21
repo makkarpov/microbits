@@ -5,6 +5,17 @@
 #include <cstdint>
 
 namespace ub::crypto {
+    namespace x25519 {
+        /** Length of X25519 private and public keys, and length of shared secret */
+        constexpr static size_t LENGTH = 32;
+
+        /** Compute public key from private key */
+        void toPublic(uint8_t *publicKey, const uint8_t *privateKey);
+
+        /** Compute X25519 shared secret from participant's keys */
+        void compute(uint8_t *secret, const uint8_t *privateKey, const uint8_t *publicKey);
+    }
+
     namespace ed25519 {
         /** Length of Ed25519 private and public keys */
         constexpr static size_t KEY_LENGTH = 32;
@@ -56,6 +67,17 @@ namespace ub::crypto {
          * @return          true if signature is valid
          */
         bool verifyHash(const uint8_t *key, const uint8_t *signature, const uint8_t *hash);
+    }
+
+    namespace x448 {
+        /** Length of X448 private and public keys, and length of shared secret */
+        constexpr static size_t LENGTH = 56;
+
+        /** Compute public key from private key */
+        void toPublic(uint8_t *publicKey, const uint8_t *privateKey);
+
+        /** Compute X448 shared secret from participant's keys */
+        void compute(uint8_t *secret, const uint8_t *privateKey, const uint8_t *publicKey);
     }
 
     namespace ed448 {

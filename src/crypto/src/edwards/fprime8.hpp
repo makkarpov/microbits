@@ -1,5 +1,5 @@
-#ifndef UB_SRC_CRYPTO_EDWARDS_FPRIME_H
-#define UB_SRC_CRYPTO_EDWARDS_FPRIME_H
+#ifndef UB_SRC_CRYPTO_EDWARDS_FPRIME8_H
+#define UB_SRC_CRYPTO_EDWARDS_FPRIME8_H
 
 #include "f25519.hpp"
 
@@ -22,4 +22,4 @@ namespace ub::crypto::impl {
     }
 }
 
-#endif // UB_SRC_CRYPTO_EDWARDS_FPRIME_H
+#endif // UB_SRC_CRYPTO_EDWARDS_FPRIME8_H

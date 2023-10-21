@@ -78,6 +78,17 @@ namespace ub::crypto::impl {
          *  * it prevents creation of constexpr values
          */
         void destroy() { secureZero(u8, N_U8); }
+
+        /** If condition is false, leaves `u` and `v` unmodified. Otherwise, swaps `u` and `v`. */
+        static void swap(bool condition, bigint_t &u, bigint_t &v) {
+            uint32_t mask = -(condition & 1);   // 0 -> 0x00, 1 -> 0xFF
+
+            for (size_t i = 0; i < N_U32; i++) {
+                uint32_t diff = (u.u32[i] ^ v.u32[i]) & mask;
+                u.u32[i] = u.u32[i] ^ diff;
+                v.u32[i] = v.u32[i] ^ diff;
+            }
+        }
     };
 
     using uint256_t = bigint_t<256>;

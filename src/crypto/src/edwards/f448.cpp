@@ -152,24 +152,16 @@ void F448::mul(uint448_t &r, const uint448_t &a, const uint448_t &b) {
     secureZero(tmp, sizeof(tmp));
 }
 
-namespace {
-    struct f448_bigint_ops {
-        static inline void mul(uint448_t &r, const uint448_t &a, const uint448_t &b) {
-            F448::mul(r, a, b);
-        }
-    };
-}
-
 void F448::inv(uint448_t &r, const uint448_t &x) {
     static const uint8_t powers[] = { 0xFF, 0xBF, 0x02, 0xFF, 0xBF, 0x02, 0x03, 0x00 };
 
     uint448_t s;
-    bigint_pow_rle<uint448_t, f448_bigint_ops>(r, s, x, powers);
+    bigint_pow_rle<uint448_t, F448>(r, s, x, powers);
 }
 
 void F448::powP34(uint448_t &r, const uint448_t &x) {
     static const uint8_t powers[] = { 0xFF, 0xBF, 0x02, 0xFF, 0xBF, 0x00 };
 
     uint448_t s;
-    bigint_pow_rle<uint448_t, f448_bigint_ops>(s, r, x, powers);
+    bigint_pow_rle<uint448_t, F448>(s, r, x, powers);
 }

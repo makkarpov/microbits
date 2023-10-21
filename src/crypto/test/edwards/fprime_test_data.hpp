@@ -1,5 +1,5 @@
-#ifndef UB_TEST_CRYPTO_C25519_FPRIME_TEST_DATA_H
-#define UB_TEST_CRYPTO_C25519_FPRIME_TEST_DATA_H
+#ifndef UB_TEST_CRYPTO_EDWARDS_FPRIME_TEST_DATA_H
+#define UB_TEST_CRYPTO_EDWARDS_FPRIME_TEST_DATA_H
 
 #include <cstdint>
 #include <cstddef>
@@ -24,4 +24,4 @@ struct fp_binary_test {
 extern const fp_load_test * const fp_load_tests[];
 extern const fp_binary_test * const fp_binary_tests[];
 
-#endif // UB_TEST_CRYPTO_C25519_FPRIME_TEST_DATA_H
+#endif // UB_TEST_CRYPTO_EDWARDS_FPRIME_TEST_DATA_H

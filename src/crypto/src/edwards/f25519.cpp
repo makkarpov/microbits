@@ -126,20 +126,12 @@ void F25519::mul(uint256_t &r, const uint256_t &a, const uint256_t &b) {
     f25519_reduce_single(r, c1);
 }
 
-namespace {
-    struct f25519_bigint_ops {
-        static inline void mul(uint256_t &r, const uint256_t &a, const uint256_t &b) {
-            F25519::mul(r, a, b);
-        }
-    };
-}
-
 void F25519::inv(uint256_t &r, const uint256_t &x) {
     // Power opcodes for (q-2) = 2^255-21
     static uint8_t powers[] = { 255, 245, 2, 3, 2, 5, 0 };
 
     uint256_t s;
-    bigint_pow_rle<uint256_t, f25519_bigint_ops>(r, s, x, powers);
+    bigint_pow_rle<uint256_t, F25519>(r, s, x, powers);
 
     s.destroy();
 }
@@ -149,7 +141,7 @@ void F25519::pow58(uint256_t &r, const uint256_t &x) {
     static uint8_t powers2523[] = { 255, 245, 2, 3, 0 };
 
     uint256_t t;
-    bigint_pow_rle<uint256_t, f25519_bigint_ops>(t, r, x, powers2523);
+    bigint_pow_rle<uint256_t, F25519>(t, r, x, powers2523);
 
     t.destroy();
 }

@@ -61,6 +61,7 @@ if ("${ENABLE_TESTING}")
     run_test_generator(ed448_test_data.cpp edwards/ed448_test_gen.py)
     run_test_generator(fprime_test_data.cpp edwards/fprime_test_gen.py)
     run_test_generator(eddsa_test_data.cpp edwards/eddsa_test_gen.py)
+    run_test_generator(eddh_test_data.cpp edwards/eddh_test_gen.py)
 
     # Intermediate static library to avoid repeated compilations when building a lot of tests
     add_library(ub_crypto_tests STATIC EXCLUDE_FROM_ALL "${GENERATED_FILES}" test/test_utils.cpp)
@@ -78,6 +79,7 @@ if ("${ENABLE_TESTING}")
     add_crypto_test(edwards/ed448.cpp)
     add_crypto_test(edwards/fprime.cpp)
     add_crypto_test(edwards/eddsa.cpp)
+    add_crypto_test(edwards/eddh.cpp)
 endif ()
 
 if ("${ENABLE_DEVICE_TESTING}")
@@ -109,6 +111,21 @@ if ("${ENABLE_DEVICE_TESTING}")
             NAME        crypto_eddsa_sign_448_Os
             SOURCES     test/device/eddsa_sign.cpp
             RUNNER      test/device/eddsa_runner.py sign 448
+            DEFINES     TEST_ED448=1
+            ${COMMON_ARGS}
+    )
+
+    add_device_test(
+            NAME        crypto_eddh_25519_Os
+            SOURCES     test/device/eddh.cpp
+            RUNNER      test/device/eddh_runner.py 25519
+            ${COMMON_ARGS}
+    )
+
+    add_device_test(
+            NAME        crypto_eddh_448_Os
+            SOURCES     test/device/eddh.cpp
+            RUNNER      test/device/eddh_runner.py 448
             DEFINES     TEST_ED448=1
             ${COMMON_ARGS}
     )
