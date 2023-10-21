@@ -103,7 +103,7 @@ def run():
         map(lambda xx: xx.to_bytes(32, 'little'), random_numbers)
     )
 
-    out.write('#include <c25519/ed25519_test_data.hpp>\n')
+    out.write('#include <edwards/ed25519_test_data.hpp>\n')
 
     out.write('\nconst ed25519_add_test * const ed25519_add_tests[] = {\n')
     for i, (p1, p2) in enumerate(add_samples):

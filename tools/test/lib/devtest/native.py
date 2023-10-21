@@ -67,9 +67,13 @@ class TargetManager:
         self.exe_max_size = self.ram_total - self.ram_stack_sz - self.ram_reserved_sz
         self.exe_entry_point = 0
 
+    @property
+    def ram_scratchpad_sz(self) -> int:
+        return self.ram_stack_ptr - self.ram_scratchpad_ptr
+
     def fill_memory(self, start: int, end: int, value: int):
         # void erase_memory(void *start, void *end, uint32_t fill);
-        erase_applet = b'\x0b\x1a\x03+\x02\xdc\x88B\x03\xd1U\xbe@\xf8\x04+\xf6\xe7\x00\xf8\x01+\xf6\xe7'
+        erase_applet = bytes.fromhex('0b1a032b02dc884203d155be40f8042bf6e700f8012bf6e7')
 
         value = value & 0xFF
         value = value | (value << 8)
@@ -103,11 +107,6 @@ class TargetManager:
 
         self.ram_scratchpad_ptr = exe.max_addr
         self.exe_entry_point = exe.entry_point
-
-
-    @property
-    def ram_scratchpad_sz(self) -> int:
-        return self.ram_stack_ptr - self.ram_scratchpad_ptr
 
     def run_executable(self):
         self.link.write_mem(self.ram_reserved_ptr, b'\x55\xBE')         # 'bkpt' instruction

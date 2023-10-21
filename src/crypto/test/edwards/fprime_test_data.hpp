@@ -5,18 +5,20 @@
 #include <cstddef>
 
 struct fp_load_test {
+    uint32_t ml;    //! Length of the modulus
     uint32_t il;    //! Length of the input
     uint8_t  i[96]; //! Input number
-    uint8_t  m[32]; //! Modulus
-    uint8_t  r[32]; //! Expected result
+    uint8_t  m[64]; //! Modulus
+    uint8_t  r[64]; //! Expected result
 };
 
 struct fp_binary_test {
-    uint8_t a[32];  //! Input number
-    uint8_t b[32];  //! Input number
-    uint8_t m[32];  //! Modulus
-    uint8_t s[32];  //! (a + b) % m
-    uint8_t p[32];  //! (a * b) % m
+    uint32_t ml;    //! Length of the modulus
+    uint8_t  a[64]; //! Input number
+    uint8_t  b[64]; //! Input number
+    uint8_t  m[64]; //! Modulus
+    uint8_t  s[64]; //! (a + b) % m
+    uint8_t  p[64]; //! (a * b) % m
 };
 
 extern const fp_load_test * const fp_load_tests[];

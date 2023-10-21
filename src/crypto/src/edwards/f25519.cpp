@@ -4,12 +4,6 @@
 
 using namespace ub::crypto::impl;
 
-constexpr uint256_t ub::crypto::impl::C25519_ORDER {
-    uint256_t::from_u8,
-    0xED, 0xD3, 0xF5, 0x5C, 0x1A, 0x63, 0x12, 0x58, 0xD6, 0x9C, 0xF7, 0xA2, 0xDE, 0xF9, 0xDE, 0x14,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10
-};
-
 static uint32_t u256_add_carry(const uint256_t &src, uint256_t &dst, size_t length, uint32_t carry) {
     uint64_t carry64 = carry;
 
@@ -134,43 +128,12 @@ void F25519::mul(uint256_t &r, const uint256_t &a, const uint256_t &b) {
     f25519_reduce_single(r, c1);
 }
 
-// carry has 32 bits, we process 8 bits at time, so b must be 24 bits at most
-void F25519::mul_u24(uint256_t &r, const uint256_t &a, uint32_t b) {
-    uint64_t c = 0;
-
-    for (size_t i = 0; i < uint256_t::N_U32; i++) {
-        c += (uint64_t) b * (uint64_t) a.u32[i];
-        r.u32[i] = c;
-        c >>= 32;
-    }
-
-    f25519_reduce_single(r, c);
-}
-
-// interpret `powers` array as a sequence of run-length encoded bits of power, starting from most significant bit.
-// Lowest bit of opcode encodes the actual power bit, higher bits encode repetition count.
-static void f25519_pow_rle(uint256_t &r, uint256_t &s, const uint256_t &x, const uint8_t *powers) {
-    uint256_t *a = &s;
-    uint256_t *b = &r;
-
-    std::memcpy(r.u8, x.u8, sizeof(r.u8));
-
-    uint8_t i;
-    while ((i = *powers) != 0) {
-        while (i > 1) {
-            F25519::mul(*a, *b, *b);
-
-            if (i & 1) {
-                F25519::mul(*b, *a, x);
-            } else {
-                std::swap(a, b);
-            }
-
-            i -= 2;
+namespace {
+    struct f25519_bigint_ops {
+        static inline void mul(uint256_t &r, const uint256_t &a, const uint256_t &b) {
+            F25519::mul(r, a, b);
         }
-
-        powers++;
-    }
+    };
 }
 
 void F25519::inv(uint256_t &r, const uint256_t &x) {
@@ -178,7 +141,7 @@ void F25519::inv(uint256_t &r, const uint256_t &x) {
     static uint8_t powers[] = { 255, 245, 2, 3, 2, 5, 0 };
 
     uint256_t s;
-    f25519_pow_rle(r, s, x, powers);
+    bigint_pow_rle<uint256_t, f25519_bigint_ops>(r, s, x, powers);
 
     s.destroy();
 }
@@ -190,8 +153,8 @@ void F25519::sqrt(uint256_t &r, const uint256_t &a) {
     using namespace F25519;
     uint256_t v, i, x, y;
 
-    mul_u24(x, a, 2);
-    f25519_pow_rle(y, v, x, powers2523);
+    add(x, a, a);
+    bigint_pow_rle<uint256_t, f25519_bigint_ops>(y, v, x, powers2523);
 
     mul(y, v, v);
     mul(i, x, y);

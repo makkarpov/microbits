@@ -40,7 +40,7 @@ def run():
         out = open(sys.argv[1], 'w', encoding='utf-8')
         close_out = True
 
-    out.write('#include <c25519/fprime_test_data.hpp>\n')
+    out.write('#include <edwards/fprime_test_data.hpp>\n')
 
     out.write('\nconst fp_load_test * const fp_load_tests[] = {\n')
     for i, t in enumerate(load_tests):

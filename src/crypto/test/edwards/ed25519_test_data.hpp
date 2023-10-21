@@ -1,5 +1,5 @@
-#ifndef UB_TEST_CRYPTO_C25519_ED25519_TEST_DATA_H
-#define UB_TEST_CRYPTO_C25519_ED25519_TEST_DATA_H
+#ifndef UB_TEST_CRYPTO_EDWARDS_ED25519_TEST_DATA_H
+#define UB_TEST_CRYPTO_EDWARDS_ED25519_TEST_DATA_H
 
 #include <cstdint>
 
@@ -31,4 +31,4 @@ extern const ed25519_add_test * const ed25519_add_tests[];
 extern const ed25519_mul_test * const ed25519_mul_tests[];
 extern const ed25519_load_test * const ed25519_load_tests[];
 
-#endif // UB_TEST_CRYPTO_C25519_ED25519_TEST_DATA_H
+#endif // UB_TEST_CRYPTO_EDWARDS_ED25519_TEST_DATA_H

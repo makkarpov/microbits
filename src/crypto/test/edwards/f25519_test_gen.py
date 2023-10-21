@@ -45,18 +45,13 @@ def run():
         itertools.product(random_values, random_values)
     ))
 
-    mul_u32_samples = map(
-        lambda xx: (xx, random_number(1 << 24)),
-        itertools.chain(special_values, random_values, random_squares)
-    )
-
     out = sys.stdout
     close_out = False
     if len(sys.argv) > 1:
         out = open(sys.argv[1], 'w', encoding='utf-8')
         close_out = True
 
-    out.write('#include <c25519/f25519_test_data.hpp>\n')
+    out.write('#include <edwards/f25519_test_data.hpp>\n')
 
     out.write('\nconst f25519_norm_test * const f25519_norm_tests[] = {\n')
     for i, x in enumerate(norm_samples):
@@ -82,16 +77,6 @@ def run():
             out.write('    .re = false,\n')
             out.write('    .r = {}\n')
 
-        out.write('  }},\n')
-    out.write('  nullptr\n};\n')
-
-    out.write('\nconst f25519_mul_u32_test * const f25519_mul_u32_tests[] = {\n')
-    for i, (x, y) in enumerate(mul_u32_samples):
-        out.write('  // (%03d) 0x%064X * 0x%08X\n' % (i, x, y))
-        out.write('  (const f25519_mul_u32_test []) {{\n')
-        out.write('    .x = ' + number_to_c(x) + ',\n')
-        out.write('    .y = 0x%08X,\n' % y)
-        out.write('    .p = ' + number_to_c((x * y) % q) + '\n')
         out.write('  }},\n')
     out.write('  nullptr\n};\n')
 

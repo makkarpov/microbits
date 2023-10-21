@@ -1,11 +1,16 @@
-#ifndef UB_SRC_CRYPTO_C25519_ED25519_H
-#define UB_SRC_CRYPTO_C25519_ED25519_H
+#ifndef UB_SRC_CRYPTO_EDWARDS_ED25519_H
+#define UB_SRC_CRYPTO_EDWARDS_ED25519_H
 
 #include "f25519.hpp"
+#include "fprime8.hpp"
 
 namespace ub::crypto::impl {
+    /** Order of Curve25519 elliptic group field, also known as `L` */
+    extern const fp8_field_t C25519_ORDER;
+
     /** Ed25519 point in projective coordinates */
-    struct ed25519_pt {
+    class ed25519_pt {
+    public:
         uint256_t x;
         uint256_t y;
         uint256_t t;
@@ -24,7 +29,7 @@ namespace ub::crypto::impl {
         void unproject();
 
         /** Test whether two points are equal */
-        bool equals(const ed25519_pt &other) const;
+        [[nodiscard]] bool equals(const ed25519_pt &other) const;
 
         /** Store a compressed representation of this point in buffer */
         void store(uint8_t *buffer);
@@ -51,4 +56,4 @@ namespace ub::crypto::impl {
     }
 }
 
-#endif // UB_SRC_CRYPTO_C25519_ED25519_H
+#endif // UB_SRC_CRYPTO_EDWARDS_ED25519_H

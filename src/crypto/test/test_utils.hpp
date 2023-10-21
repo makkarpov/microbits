@@ -5,7 +5,10 @@
 #include <cstddef>
 
 /** Print 256-bit number stored in little-endian form */
-void printNumber(const char *prefix, const uint8_t *x);
+void printNumber256(const char *prefix, const uint8_t *x);
+
+/** Print 256-bit number stored in little-endian form */
+void printNumber448(const char *prefix, const uint8_t *x);
 
 /** Print raw bytes as hex */
 void printBytes(const char *prefix, const uint8_t *x, size_t length);

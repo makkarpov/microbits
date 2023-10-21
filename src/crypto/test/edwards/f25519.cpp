@@ -1,5 +1,5 @@
-#include <c25519/f25519.hpp>
-#include <c25519/f25519_test_data.hpp>
+#include <edwards/f25519.hpp>
+#include <edwards/f25519_test_data.hpp>
 
 #include <test_utils.hpp>
 
@@ -40,8 +40,8 @@ static void assertEquals(const uint256_t &actual, const uint8_t *expected, size_
     }
 
     fprintf(stderr, "F25519::%s test failed at sample %zd\n", name, sample);
-    printNumber("Actual  ", actual.u8);
-    printNumber("Expected", expected);
+    printNumber256("Actual  ", actual.u8);
+    printNumber256("Expected", expected);
     exit(1);
 }
 
@@ -54,16 +54,6 @@ int main() {
 
         F25519::normalize(x);
         assertEquals(x, t->y, i, "normalize", true);
-    }
-
-    for (size_t i = 0; f25519_mul_u32_tests[i] != nullptr; i++) {
-        const f25519_mul_u32_test *t = f25519_mul_u32_tests[i];
-
-        uint256_t x, r;
-        memcpy(x.u8, t->x, uint256_t::N_U8);
-
-        F25519::mul_u24(r, x, t->y);
-        assertEquals(r, t->p, i, "mul_u24");
     }
 
     for (size_t i = 0; f25519_binary_tests[i] != nullptr; i++) {

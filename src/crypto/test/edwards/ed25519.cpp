@@ -1,5 +1,5 @@
 #include "ed25519_test_data.hpp"
-#include <c25519/ed25519.hpp>
+#include <edwards/ed25519.hpp>
 
 #include <test_utils.hpp>
 
@@ -23,12 +23,12 @@ static void assertEquals(ed25519_pt &p, const uint8_t *rx, const uint8_t *ry, si
 
     fprintf(stderr, "ED25519::%s test failure at sample %zd\n", name, sample);
     fprintf(stderr, "Expected:\n");
-    printNumber("  X", rx);
-    printNumber("  Y", ry);
+    printNumber256("  X", rx);
+    printNumber256("  Y", ry);
 
     fprintf(stderr, "Actual:\n");
-    printNumber("  X", p.x.u8);
-    printNumber("  Y", p.y.u8);
+    printNumber256("  X", p.x.u8);
+    printNumber256("  Y", p.y.u8);
 
     exit(1);
 }

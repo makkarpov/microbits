@@ -1,5 +1,5 @@
-#ifndef UB_SRC_CRYPTO_C25519_F25519_H
-#define UB_SRC_CRYPTO_C25519_F25519_H
+#ifndef UB_SRC_CRYPTO_EDWARDS_F25519_H
+#define UB_SRC_CRYPTO_EDWARDS_F25519_H
 
 #include <cstdint>
 #include <cstddef>
@@ -9,12 +9,9 @@
 #include <ub/crypto/utility.hpp>
 #include <cstring>
 
-#include "uint256.hpp"
+#include "bigint.hpp"
 
 namespace ub::crypto::impl {
-    /** Order of Curve25519 elliptic group field, also known as `L` */
-    extern const uint256_t C25519_ORDER;
-
     /** Operations specific to `Fp(2**255 - 19)` */
     namespace F25519 {
         /** Compute `x = x % p` */
@@ -32,9 +29,6 @@ namespace ub::crypto::impl {
         /** Compute `r = a * b`. `r` must not point to `a` or `b` */
         void mul(uint256_t &r, const uint256_t &a, const uint256_t &b);
 
-        /** Compute `r = a * b`, where `b` is a 32-bit integer */
-        void mul_u24(uint256_t &r, const uint256_t &a, uint32_t b);
-
         /** Compute `r = x^-1 mod p`. `r` must not point to `x` */
         void inv(uint256_t &r, const uint256_t &x);
 
@@ -43,4 +37,4 @@ namespace ub::crypto::impl {
     }
 }
 
-#endif // UB_SRC_CRYPTO_C25519_F25519_H
+#endif // UB_SRC_CRYPTO_EDWARDS_F25519_H

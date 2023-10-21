@@ -1,10 +1,10 @@
-#ifndef UB_TEST_CRYPTO_C25519_F25519_TEST_DATA_H
-#define UB_TEST_CRYPTO_C25519_F25519_TEST_DATA_H
+#ifndef UB_TEST_CRYPTO_EDWARDS_F25519_TEST_DATA_H
+#define UB_TEST_CRYPTO_EDWARDS_F25519_TEST_DATA_H
 
 #include <cstdint>
 #include <cstddef>
 
-#include <c25519/f25519.hpp>
+#include <edwards/f25519.hpp>
 
 /** Number normalization test samples */
 struct f25519_norm_test {
@@ -20,12 +20,6 @@ struct f25519_unary_test {
     uint8_t r[32];  //! `sqrt(x)`
 };
 
-struct f25519_mul_u32_test {
-    uint8_t  x[32]; //! First input
-    uint32_t y;     //! Second input
-    uint8_t  p[32]; //! `x * y`
-};
-
 struct f25519_binary_test {
     uint8_t x[32];  //! First input
     uint8_t y[32];  //! Second input
@@ -37,7 +31,6 @@ struct f25519_binary_test {
 
 extern const f25519_norm_test * const f25519_norm_tests[];
 extern const f25519_unary_test * const f25519_unary_tests[];
-extern const f25519_mul_u32_test * const f25519_mul_u32_tests[];
 extern const f25519_binary_test * const f25519_binary_tests[];
 
-#endif // UB_TEST_CRYPTO_C25519_F25519_TEST_DATA_H
+#endif // UB_TEST_CRYPTO_EDWARDS_F25519_TEST_DATA_H

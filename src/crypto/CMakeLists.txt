@@ -55,10 +55,12 @@ if ("${ENABLE_TESTING}")
     run_test_generator(sha3_512_test_data.cpp hash/hash_test_gen.py sha3_512)
     run_test_generator(shake128_test_data.cpp hash/hash_test_gen.py shake_128)
     run_test_generator(shake256_test_data.cpp hash/hash_test_gen.py shake_256)
-    run_test_generator(f25519_test_data.cpp c25519/f25519_test_gen.py)
-    run_test_generator(ed25519_test_data.cpp c25519/ed25519_test_gen.py)
-    run_test_generator(fprime_test_data.cpp c25519/fprime_test_gen.py)
-    run_test_generator(eddsa_test_data.cpp c25519/eddsa_test_gen.py)
+    run_test_generator(f25519_test_data.cpp edwards/f25519_test_gen.py)
+    run_test_generator(f448_test_data.cpp edwards/f448_test_gen.py)
+    run_test_generator(ed25519_test_data.cpp edwards/ed25519_test_gen.py)
+    run_test_generator(ed448_test_data.cpp edwards/ed448_test_gen.py)
+    run_test_generator(fprime_test_data.cpp edwards/fprime_test_gen.py)
+    run_test_generator(eddsa_test_data.cpp edwards/eddsa_test_gen.py)
 
     # Intermediate static library to avoid repeated compilations when building a lot of tests
     add_library(ub_crypto_tests STATIC EXCLUDE_FROM_ALL "${GENERATED_FILES}" test/test_utils.cpp)
@@ -70,26 +72,44 @@ if ("${ENABLE_TESTING}")
     add_crypto_test(hash/sha2_sha512.cpp)
     add_crypto_test(hash/sha3_sha3.cpp)
     add_crypto_test(hash/sha3_shake.cpp)
-    add_crypto_test(c25519/f25519.cpp)
-    add_crypto_test(c25519/ed25519.cpp)
-    add_crypto_test(c25519/fprime.cpp)
-    add_crypto_test(c25519/eddsa.cpp)
+    add_crypto_test(edwards/f25519.cpp)
+    add_crypto_test(edwards/f448.cpp)
+    add_crypto_test(edwards/ed25519.cpp)
+    add_crypto_test(edwards/ed448.cpp)
+    add_crypto_test(edwards/fprime.cpp)
+    add_crypto_test(edwards/eddsa.cpp)
 endif ()
 
 if ("${ENABLE_DEVICE_TESTING}")
     set(COMMON_ARGS "LIBRARIES;ub_crypto;CC_FLAGS;-Os;-Wall;-Wextra")
 
     add_device_test(
-            NAME        crypto_eddsa_verify_Os
+            NAME        crypto_eddsa_verify_25519_Os
             SOURCES     test/device/eddsa_verify.cpp
-            RUNNER      test/device/eddsa_runner.py verify
+            RUNNER      test/device/eddsa_runner.py verify 25519
             ${COMMON_ARGS}
     )
 
     add_device_test(
-            NAME        crypto_eddsa_sign_Os
+            NAME        crypto_eddsa_verify_448_Os
+            SOURCES     test/device/eddsa_verify.cpp
+            RUNNER      test/device/eddsa_runner.py verify 448
+            DEFINES     TEST_ED448=1
+            ${COMMON_ARGS}
+    )
+
+    add_device_test(
+            NAME        crypto_eddsa_sign_25519_Os
             SOURCES     test/device/eddsa_sign.cpp
-            RUNNER      test/device/eddsa_runner.py sign
+            RUNNER      test/device/eddsa_runner.py sign 25519
+            ${COMMON_ARGS}
+    )
+
+    add_device_test(
+            NAME        crypto_eddsa_sign_448_Os
+            SOURCES     test/device/eddsa_sign.cpp
+            RUNNER      test/device/eddsa_runner.py sign 448
+            DEFINES     TEST_ED448=1
             ${COMMON_ARGS}
     )
 

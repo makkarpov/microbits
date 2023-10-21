@@ -1,10 +1,10 @@
-#include <ub/crypto/c25519.hpp>
+#include <ub/crypto/edwards.hpp>
 
 #include <ub/crypto/sha2.hpp>
 
 #include "f25519.hpp"
 #include "ed25519.hpp"
-#include "fprime.hpp"
+#include "fprime8.hpp"
 
 // Planned customization option - create non-standard Ed25519 variants with different hashes
 // SHA-512 is way too big for some applications like bootloaders, with its giant round
@@ -56,7 +56,7 @@ static void ed25519_expand_key(ed25519_sign_ctx &ctx, const uint8_t *key) {
     digest[0] &= 0xF8;
     digest[31] = (digest[31] & 0x7F) | 0x40;
 
-    Fp::load(ctx.s, digest, ed25519::KEY_LENGTH, C25519_ORDER);
+    Fp8::load(ctx.s.u8, digest, ed25519::KEY_LENGTH, C25519_ORDER);
     memcpy(ctx.prefix, digest + ed25519::KEY_LENGTH, ed25519::KEY_LENGTH);
 
     secureZero(digest, sizeof(digest));
@@ -72,7 +72,7 @@ static void ed25519_derive_r(const ed25519_sign_ctx &ctx, uint256_t &r)
     uint8_t digest[ED25519_HASH::OUTPUT];
     hash.finish(digest);
 
-    Fp::load(r, digest, ED25519_HASH::OUTPUT, C25519_ORDER);
+    Fp8::load(r.u8, digest, ED25519_HASH::OUTPUT, C25519_ORDER);
 
     secureZero(digest, sizeof(digest));
 }
@@ -98,7 +98,7 @@ static void ed25519_compute_k(const ed25519_msg &m, uint256_t &k, const uint8_t 
     uint8_t digest[ED25519_HASH::OUTPUT];
     hash.finish(digest);
 
-    Fp::load(k, digest, ED25519_HASH::OUTPUT, C25519_ORDER);
+    Fp8::load(k.u8, digest, ED25519_HASH::OUTPUT, C25519_ORDER);
 }
 
 static void ed25519_sign_impl(ed25519_sign_ctx &ctx, const uint8_t *key, uint8_t *signature) {
@@ -112,8 +112,8 @@ static void ed25519_sign_impl(ed25519_sign_ctx &ctx, const uint8_t *key, uint8_t
     ed25519_compute_k(ctx.m, k, key + ed25519::KEY_LENGTH, signature);
 
     uint256_t S;
-    Fp::mul(S, ctx.s, k, C25519_ORDER);
-    Fp::add(S, r, C25519_ORDER);
+    Fp8::mul(S.u8, ctx.s.u8, k.u8, C25519_ORDER);
+    Fp8::add(S.u8, r.u8, C25519_ORDER);
 
     r.destroy();
 
@@ -146,7 +146,7 @@ static bool ed25519_verify_compute_rhs(const ed25519_verify_ctx &ctx, ed25519_pt
 static bool ed25519_verify_compute_lhs(const ed25519_verify_ctx &ctx, ed25519_pt &r) {
     uint256_t S;
 
-    Fp::load(S, ctx.sig + ed25519::KEY_LENGTH, ed25519::KEY_LENGTH, C25519_ORDER);
+    Fp8::load(S.u8, ctx.sig + ed25519::KEY_LENGTH, ed25519::KEY_LENGTH, C25519_ORDER);
     if (std::memcmp(S.u8, ctx.sig + ed25519::KEY_LENGTH, ed25519::KEY_LENGTH) != 0) {
         // S must be less than L, so load must not perform any modular reduction here.
         // Modular reduction simply means that signature is invalid because S is out of range.
