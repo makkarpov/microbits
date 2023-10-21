@@ -106,19 +106,17 @@ void F25519::mul(uint256_t &r, const uint256_t &a, const uint256_t &b) {
 
         for (; j <= i; j++) {
             uint64_t x = (uint64_t) a.u32[j] * b.u32[i - j];
-
             uint64_t y = (uint64_t) c0 + (uint32_t) x;
-            c0 = (uint32_t) y;
 
+            c0 = (uint32_t) y;
             c1 = c1 + (uint64_t) (x >> 32) + (uint64_t) (y >> 32);
         }
 
         for (; j < uint256_t::N_U32; j++) {
             uint64_t x = (uint64_t) a.u32[j] * (uint64_t) b.u32[i + uint256_t::N_U32 - j];
-
             uint64_t y = (uint64_t) c0 + (uint64_t) ((uint32_t) x) * 38;
-            c0 = (uint32_t) y;
 
+            c0 = (uint32_t) y;
             c1 = c1 + ((x >> 32) * 38) + (y >> 32);
         }
 
@@ -146,26 +144,12 @@ void F25519::inv(uint256_t &r, const uint256_t &x) {
     s.destroy();
 }
 
-void F25519::sqrt(uint256_t &r, const uint256_t &a) {
+void F25519::pow58(uint256_t &r, const uint256_t &x) {
     // Powers opcodes for (q-5)/8 = 2^252-3
     static uint8_t powers2523[] = { 255, 245, 2, 3, 0 };
 
-    using namespace F25519;
-    uint256_t v, i, x, y;
+    uint256_t t;
+    bigint_pow_rle<uint256_t, f25519_bigint_ops>(t, r, x, powers2523);
 
-    add(x, a, a);
-    bigint_pow_rle<uint256_t, f25519_bigint_ops>(y, v, x, powers2523);
-
-    mul(y, v, v);
-    mul(i, x, y);
-
-    y = 1;
-    sub(i, i, y);
-
-    mul(x, v, a);
-    mul(r, x, i);
-
-    v.destroy();
-    i.destroy();
-    x.destroy();
+    t.destroy();
 }

@@ -8,7 +8,8 @@ from runner import TestRunner, TestEnvironment
 
 
 class _TestEnvironmentImpl(TestEnvironment):
-    def __init__(self, link: DebugLink, exe: Executable, target: TargetManager):
+    def __init__(self, name: str, link: DebugLink, exe: Executable, target: TargetManager):
+        self._name = name
         self._link = link
         self._exe = exe
         self._target = target
@@ -26,7 +27,19 @@ class _TestEnvironmentImpl(TestEnvironment):
         return self._target.ram_scratchpad_sz
 
     def run(self, result_len: int = 0):
-        self._target.run_executable()
+        r = self._target.run_executable()
+
+        print('-' * 80)
+        print('Execution completed - %s:' % self._name)
+        print('  Executable size:  %d bytes' % self._exe.load_size)
+        print('  Processor cycles: %d' % r.cycles)
+
+        cycle_scale = 1000
+        cpu_time = (r.cycles * cycle_scale // self._target.f_cpu) / cycle_scale
+        print('  Execution time:   %.3fs' % cpu_time)
+
+        print('  Peak stack usage: %d bytes' % r.stack_bytes)
+        print('-' * 80)
 
         if result_len == 0:
             return None
@@ -115,11 +128,9 @@ class DeviceTestApp:
         self.executable = Executable(self.args.executable)
 
         self.target.load_executable(self.executable)
-        print('executable size: %d bytes' % self.executable.load_size)
-
         self.target.erase_scratchpad()
 
-        self._test_env = _TestEnvironmentImpl(self.link, self.executable, self.target)
+        self._test_env = _TestEnvironmentImpl(self.args.name, self.link, self.executable, self.target)
         self._runner = self._load_runner()
 
         self._runner.run()

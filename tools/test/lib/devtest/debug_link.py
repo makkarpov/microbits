@@ -43,6 +43,11 @@ class DebugLink:
     def write_u32(self, address: int, value: int):
         self.swd.set_mem32(address, value)
 
+    def modify_u32(self, address: int, v_reset: int, v_set: int):
+        v = self.read_u32(address)
+        v = (v & ~v_reset) | v_set
+        self.write_u32(address, v)
+
     def read_reg(self, reg: Union[str, int]) -> int:
         return self.cortex.get_reg(reg)
 

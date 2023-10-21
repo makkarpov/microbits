@@ -4,10 +4,23 @@ from typing import Optional, NamedTuple
 from debug_link import DebugLink
 
 
+class Regs:
+    DEMCR = 0xE000EDFC
+    DEMCR_TRCENA = 0x01000000
+    DWT_CTRL = 0xE0001000
+    DWT_CTRL_CYCCNTENA = 0x00000001
+    DWT_CYCCNT = 0xE0001004
+
+
 class Symbol(NamedTuple):
     name: str
     address: int
     size: int
+
+
+class ExecutionResult(NamedTuple):
+    cycles: int
+    stack_bytes: int
 
 
 class Executable:
@@ -53,6 +66,8 @@ class Executable:
 class TargetManager:
     def __init__(self, link: DebugLink):
         self.link = link
+
+        self.f_cpu = 32000000
 
         self.ram_start = 0x20000000
         self.ram_total = 640 * 1024
@@ -108,13 +123,37 @@ class TargetManager:
         self.ram_scratchpad_ptr = exe.max_addr
         self.exe_entry_point = exe.entry_point
 
-    def run_executable(self):
+    @staticmethod
+    def __get_used_stack(ref: bytes, actual: bytes) -> int:
+        stack_good = 0
+        while stack_good < len(ref) and ref[stack_good] == actual[stack_good]:
+            stack_good += 1
+
+        stack_align = 8
+        stack_good = (stack_good // stack_align) * stack_align
+        return len(ref) - stack_good
+
+    def run_executable(self) -> ExecutionResult:
+        import secrets
+
+        # Prepare for stack usage measurement:
+        stack_image = secrets.token_bytes(self.ram_stack_sz)
+        self.link.write_mem(self.ram_stack_ptr, stack_image)
+
+        # Prepare for cycle counting:
+        self.link.modify_u32(Regs.DEMCR, 0, Regs.DEMCR_TRCENA)
+        self.link.modify_u32(Regs.DWT_CTRL, 0, Regs.DWT_CTRL_CYCCNTENA)
+        self.link.write_u32(Regs.DWT_CYCCNT, 0)
+
+        # Initialize entry point and run:
         self.link.write_mem(self.ram_reserved_ptr, b'\x55\xBE')         # 'bkpt' instruction
         self.link.write_reg('SP', self.ram_stack_ptr + self.ram_stack_sz)
         self.link.write_reg('LR', self.ram_reserved_ptr | 1)            # set thumb bit (to handle 'bx lr')
-        self.link.write_reg('PC', self.exe_entry_point & 0xFFFFFFFE)    # load without thumb bit
-
+        self.link.write_reg('PC', self.exe_entry_point & ~1)            # load without thumb bit
         self.link.run()
+
+        cycles_overflow = 0
+        cycles_last = 0
 
         t_start = time.time()
         while not self.link.is_halted():
@@ -122,10 +161,20 @@ class TargetManager:
                 self.link.halt()
                 raise RuntimeError('execution timeout')
 
+            # at 160MHz clock frequency 32-bit CYCCNT counter will overflow every 26s
+            cycles_now = self.link.read_u32(Regs.DWT_CYCCNT)
+            if cycles_now < cycles_last:
+                cycles_overflow += 1
+            cycles_last = cycles_now
+
             time.sleep(0.2)
 
-        t_diff = time.time() - t_start
-        print('Execution completed in %.3f seconds' % t_diff)
+        n_cycles = self.link.read_u32(Regs.DWT_CYCCNT) | (cycles_overflow << 32)
+
+        stack_image_r = self.link.read_mem(self.ram_stack_ptr, self.ram_stack_sz)
+        stack_used = TargetManager.__get_used_stack(stack_image, stack_image_r)
+
+        return ExecutionResult(n_cycles, stack_used)
 
     def erase_scratchpad(self):
         self.fill_memory(self.ram_scratchpad_ptr, self.ram_stack_ptr, 0xFF)

@@ -32,6 +32,9 @@ namespace ub::crypto::impl {
         /** Compute `r = x^-1 mod p`. `r` must not point to `x` */
         void inv(uint256_t &r, const uint256_t &x);
 
+        /** Compute `r = x^((p-5)/8) mod p` */
+        void pow58(uint256_t &r, const uint256_t &x);
+
         /** Compute `r = sqrt(x) mod p`. */
         void sqrt(uint256_t &r, const uint256_t &x);
     }
