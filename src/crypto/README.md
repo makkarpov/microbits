@@ -1,10 +1,13 @@
 # ub_crypto
 
-Small collection of cryptographic primitives, optimized for minimal code size. Contains the following primitives:
+Small collection of cryptographic primitives, optimized mostly for minimal code size. Contains the following primitives:
 
-* AES (encryption only)
-* SHA2 (SHA-256 and SHA-512)
-* Ed25519 and Ed448
+* **AES** block cipher: ECB mode (encryption only) and CTR mode (encryption and decryption)
+* **ChaCha20** stream cipher: encryption and decryption
+* **SHA2**: SHA-256 and SHA-512
+* **SHA3**: SHA3 (any output length) and SHAKE (128 and 256 variants)
+* **Ed25519** and **Ed448** digital signature schemes
+* **X25519** and **X448** key exchange protocols
 
 # Resource usage
 

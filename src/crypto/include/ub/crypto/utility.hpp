@@ -10,8 +10,11 @@ namespace ub::crypto {
     /** @return true if two buffers contain identical content */
     bool secureCompare(const void *a, const void *b, size_t length);
 
-    /** XOR data from `src` buffer over data in `dst` buffer */
-    void exclusiveOr(void *dst, const void *src, size_t length);
+    /**
+     * Perform exclusive-or operation `dst[i] = src[i] ^ gamma[i]`.
+     * `dst` buffer is used for `gamma` if `gamma` is null
+     */
+    void exclusiveOr(void *dst, const void *src, size_t length, const void *gamma = nullptr);
 }
 
 #endif // UB_CRYPTO_UTILITY_H

@@ -62,6 +62,8 @@ if ("${ENABLE_TESTING}")
     run_test_generator(fprime_test_data.cpp edwards/fprime_test_gen.py)
     run_test_generator(eddsa_test_data.cpp edwards/eddsa_test_gen.py)
     run_test_generator(eddh_test_data.cpp edwards/eddh_test_gen.py)
+    run_test_generator(aes_test_data.cpp cipher/block_test_gen.py aes)
+    run_test_generator(chacha20_test_data.cpp cipher/stream_test_gen.py chacha20)
 
     # Intermediate static library to avoid repeated compilations when building a lot of tests
     add_library(ub_crypto_tests STATIC EXCLUDE_FROM_ALL "${GENERATED_FILES}" test/test_utils.cpp)
@@ -80,6 +82,8 @@ if ("${ENABLE_TESTING}")
     add_crypto_test(edwards/fprime.cpp)
     add_crypto_test(edwards/eddsa.cpp)
     add_crypto_test(edwards/eddh.cpp)
+    add_crypto_test(cipher/aes.cpp)
+    add_crypto_test(cipher/chacha20.cpp)
 endif ()
 
 if ("${ENABLE_DEVICE_TESTING}")
@@ -155,6 +159,22 @@ if ("${ENABLE_DEVICE_TESTING}")
             NAME        crypto_sha3_sha256_Os
             SOURCES     test/device/sha3_sha256.cpp
             RUNNER      test/device/hash_runner.py sha3_256
+            ${COMMON_ARGS}
+    )
+
+    add_device_test(
+            NAME        crypto_aes_Os
+            SOURCES     test/device/cipher.cpp
+            RUNNER      test/device/cipher_runner.py aes
+            DEFINES     TEST_AES=1
+            ${COMMON_ARGS}
+    )
+
+    add_device_test(
+            NAME        crypto_chacha20_Os
+            SOURCES     test/device/cipher.cpp
+            RUNNER      test/device/cipher_runner.py chacha20
+            DEFINES     TEST_CHACHA20=1
             ${COMMON_ARGS}
     )
 endif ()

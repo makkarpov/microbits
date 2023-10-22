@@ -42,7 +42,6 @@ namespace ub::crypto {
 
         static void subShift(uint8_t *state);
         static void mixColumns(uint8_t *state);
-        static void generateSBox();
         void addRoundKey(uint32_t k, uint8_t *state);
     };
 
@@ -61,8 +60,8 @@ namespace ub::crypto {
         /** Initialize AES-CTR context */
         bool init(const uint8_t *key, const uint8_t *nonce, size_t keyLength);
 
-        /** Encrypt or decrypt data buffer */
-        void process(uint8_t *buffer, size_t length);
+        /** Process (encrypt or decrypt) a buffer. This function could operate in-place. */
+        void process(uint8_t *dst, const uint8_t *src, size_t length);
 
     private:
         aes     m_aes;

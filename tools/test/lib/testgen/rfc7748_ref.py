@@ -1,3 +1,6 @@
+# Reference code from RFC 7748 document, with minor adaptations
+# src: https://datatracker.ietf.org/doc/html/rfc7748#section-5
+
 from typing import Tuple, NamedTuple, Optional, Callable
 
 

@@ -30,14 +30,16 @@ bool c::secureCompare(const void *a, const void *b, size_t length) {
     return (bool) ((diff ^ 1) & 1);
 }
 
-void ub::crypto::exclusiveOr(void *dst, const void *src, size_t length) {
+void ub::crypto::exclusiveOr(void *dst, const void *src, size_t length, const void *gamma) {
     auto dst8 = (uint8_t *) dst;
     auto src8 = (const uint8_t *) src;
+    auto gamma8 = (const uint8_t *) (gamma != nullptr ? gamma : dst);
     auto src8_end = (const uint8_t *) src + length;
 
     while (src8 != src8_end) {
-        *dst8 ^= *src8;
+        *dst8 = *src8 ^ *gamma8;
         src8++;
         dst8++;
+        gamma8++;
     }
 }
