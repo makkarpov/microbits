@@ -4,6 +4,7 @@ Small collection of cryptographic primitives, optimized mostly for minimal code 
 
 * **AES** block cipher: ECB mode (encryption only) and CTR mode (encryption and decryption)
 * **ChaCha20** stream cipher: encryption and decryption
+* Cryptographically secure random number generator implemented with ChaCha20 primitive
 * **SHA2**: SHA-256 and SHA-512
 * **SHA3**: SHA3 (any output length) and SHAKE (128 and 256 variants)
 * **Ed25519** and **Ed448** digital signature schemes

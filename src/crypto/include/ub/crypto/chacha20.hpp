@@ -28,19 +28,23 @@ namespace ub::crypto {
         /** Process (encrypt or decrypt) a buffer. This function could operate in-place. */
         void process(uint8_t *dst, const uint8_t *src, size_t length);
 
-        /** Process raw ChaCha20 state block */
+        // Low-level functions to use ChaCha20 primitive in other cryptographic constructs:
+
+        /** Process raw ChaCha20 state block located in `src`, placing the result to `dst` */
         static void processBlock(uint32_t *dst, const uint32_t *src);
 
-        /** Raw ChaCha20 state type */
+        /** Raw ChaCha20 state container type */
         union state_t {
             constexpr static size_t LENGTH = 64;
 
-            uint8_t  u8[LENGTH];
-            uint32_t u32[LENGTH / 4];
+            uint8_t  u8[LENGTH];        //! ChaCha20 state viewed as bytes
+            uint32_t u32[LENGTH / 4];   //! ChaCha20 state viewed as words
         };
 
-    private:
+        /** ChaCha20 'expand 32-byte k' constant as an array of little-endian integers */
+        static const uint32_t initialConstants[4];
 
+    private:
         state_t  m_state;
         state_t  m_stream;
         uint8_t  m_streamPtr;

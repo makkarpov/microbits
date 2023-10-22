@@ -18,7 +18,7 @@ static constexpr size_t CHACHA20_ST_PTR_NONCE   = 13;
 static const uint16_t chacha20_qr_indices[] = { 0x048C, 0x159D, 0x26AE, 0x37BF, 0x05AF, 0x16BC, 0x278D, 0x349E };
 
 /** ChaCha20 constant 'expand 32-byte k' as little endian integers */
-static const uint32_t chacha20_ks[] = { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 };
+const uint32_t chacha20::initialConstants[] = { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 };
 
 static uint32_t chacha20_rotl(uint32_t x, uint32_t i) {
     return (x << i) | (x >> (32 - i));
@@ -61,7 +61,7 @@ void chacha20::processBlock(uint32_t *state, const uint32_t *src) {
 }
 
 chacha20::chacha20(): m_state {}, m_stream {} {
-    std::memcpy(m_state.u32, chacha20_ks, sizeof(chacha20_ks));
+    std::memcpy(m_state.u32, initialConstants, sizeof(initialConstants));
     m_streamPtr = 0;
 }
 
