@@ -16,7 +16,7 @@ constexpr static uint32_t X448_K        = 39081;
 constexpr static uint32_t X448_U        = 5;
 constexpr static uint32_t X448_BITS     = 448;
 
-template <typename uintX_t, typename F, uint32_t K_a24, uint32_t N_bits>
+template <typename F, uint32_t K_a24, uint32_t N_bits, typename uintX_t = typename F::uint_t>
 static void edwards_multiply(uint8_t *r, const uintX_t &k, const uintX_t &u) {
     uintX_t x2, z2, x3, z3;
     uintX_t t[4];
@@ -83,11 +83,11 @@ static void edwards_multiply(uint8_t *r, const uintX_t &k, const uintX_t &u) {
 }
 
 static inline void x25519_multiply(uint8_t *r, const uint256_t &k, const uint256_t &u) {
-    edwards_multiply<uint256_t, F25519, X25519_K, X25519_BITS>(r, k, u);
+    edwards_multiply<F25519, X25519_K, X25519_BITS>(r, k, u);
 }
 
 static inline void x448_multiply(uint8_t *r, const uint448_t &k, const uint448_t &u) {
-    edwards_multiply<uint448_t, F448, X448_K, X448_BITS>(r, k, u);
+    edwards_multiply<F448, X448_K, X448_BITS>(r, k, u);
 }
 
 static void x25519_load_scalar(uint256_t &r, const uint8_t *src) {

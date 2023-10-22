@@ -131,7 +131,7 @@ void F25519::inv(uint256_t &r, const uint256_t &x) {
     static uint8_t powers[] = { 255, 245, 2, 3, 2, 5, 0 };
 
     uint256_t s;
-    bigint_pow_rle<uint256_t, F25519>(r, s, x, powers);
+    bigint_pow_rle<F25519>(r, s, x, powers);
 
     s.destroy();
 }
@@ -141,7 +141,7 @@ void F25519::pow58(uint256_t &r, const uint256_t &x) {
     static uint8_t powers2523[] = { 255, 245, 2, 3, 0 };
 
     uint256_t t;
-    bigint_pow_rle<uint256_t, F25519>(t, r, x, powers2523);
+    bigint_pow_rle<F25519>(t, r, x, powers2523);
 
     t.destroy();
 }

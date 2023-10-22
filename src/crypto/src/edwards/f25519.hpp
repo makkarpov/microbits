@@ -14,6 +14,9 @@
 namespace ub::crypto::impl {
     /** Operations specific to `Fp(2**255 - 19)` */
     struct F25519 {
+        /** Underlying big integer type */
+        using uint_t = uint256_t;
+
         /** Compute `x = x % p` */
         static void normalize(uint256_t &x);
 

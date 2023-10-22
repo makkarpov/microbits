@@ -6,6 +6,9 @@
 namespace ub::crypto::impl {
     /** Operations specific to `Fp(2**448 - 2**224 - 1)` */
     struct F448 {
+        /** Underlying big integer type */
+        using uint_t = uint448_t;
+
         /** Compute `r = x mod p`. Returns true if `x` was greater than `p`. */
         static bool normalize(uint448_t &r, const uint448_t &x);
 

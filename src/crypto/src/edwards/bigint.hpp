@@ -105,20 +105,20 @@ namespace ub::crypto::impl {
      * Depending on the number of swaps (which is determined by number of zero bits in exponent) final result might be
      * either in `r` or in `s`. If exponent has even number of zero bits, result is in `r`. Otherwise, result is in `s`.
      */
-    template <typename uintN_t, typename ops>
-    void bigint_pow_rle(uintN_t &r, uintN_t &s, const uintN_t &x, const uint8_t *exponent) {
-        uintN_t *a = &s;
-        uintN_t *b = &r;
+    template <typename F, typename uint_t = typename F::uint_t>
+    void bigint_pow_rle(uint_t &r, uint_t &s, const uint_t &x, const uint8_t *exponent) {
+        uint_t *a = &s;
+        uint_t *b = &r;
 
         std::memcpy(r.u8, x.u8, sizeof(r.u8));
 
         uint8_t i;
         while ((i = *exponent) != 0) {
             while (i > 1) {
-                ops::mul(*a, *b, *b);
+                F::mul(*a, *b, *b);
 
                 if (i & 1) {
-                    ops::mul(*b, *a, x);
+                    F::mul(*b, *a, x);
                 } else {
                     std::swap(a, b);
                 }

@@ -156,12 +156,12 @@ void F448::inv(uint448_t &r, const uint448_t &x) {
     static const uint8_t powers[] = { 0xFF, 0xBF, 0x02, 0xFF, 0xBF, 0x02, 0x03, 0x00 };
 
     uint448_t s;
-    bigint_pow_rle<uint448_t, F448>(r, s, x, powers);
+    bigint_pow_rle<F448>(r, s, x, powers);
 }
 
 void F448::powP34(uint448_t &r, const uint448_t &x) {
     static const uint8_t powers[] = { 0xFF, 0xBF, 0x02, 0xFF, 0xBF, 0x00 };
 
     uint448_t s;
-    bigint_pow_rle<uint448_t, F448>(s, r, x, powers);
+    bigint_pow_rle<F448>(s, r, x, powers);
 }
