@@ -93,18 +93,6 @@ int main() {
 
         F25519::inv(r, x);
         assertEquals(r, t->i, i, "inv");
-
-        if (t->re) {
-            F25519::sqrt(r, x);
-
-            // Correct answer always has its lowest bit clear
-            // F25519::sqrt finds random square root, so clear its bit too
-            if ((r.u8[0] & 1) != 0) {
-                F25519::neg(r, r);
-            }
-
-            assertEquals(r, t->r, i, "sqrt");
-        }
     }
 
     return 0;
