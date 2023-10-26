@@ -91,7 +91,7 @@ bool aes::init(const uint8_t *key, size_t length) {
 }
 
 void aes::encrypt(uint8_t *block) {
-    for (uint32_t i = 0; i < Nr - 1; i++) {
+    for (uint32_t i = 0; i < Nr - 1U; i++) {
         addRoundKey(i, block);
         subShift(block);
         mixColumns(block);
