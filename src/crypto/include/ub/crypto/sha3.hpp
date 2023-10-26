@@ -1,25 +1,50 @@
 #ifndef UB_CRYPTO_SHA3_H
 #define UB_CRYPTO_SHA3_H
 
+#include <ub/crypto/utility.hpp>
+
 #include <cstddef>
 #include <cstdint>
 #include <array>
 
 namespace ub::crypto {
-    /** Raw Keccak 1600 state update function */
-    namespace keccak1600 {
+    /** Raw Keccak 1600 state update function and streaming primitive */
+    struct keccak1600 {
+        // Static declarations: ----------------------------------------------------------------------------------------
+
         /** Length of the intermediate state in bytes */
         constexpr static size_t LENGTH = 200;
 
-        /** Internal state array typedef for convenience */
-        using state_t = std::array<uint8_t, LENGTH>;
+        /** Internal state array type */
+        union state_t {
+            uint8_t  u8[LENGTH];
+            uint32_t u32[LENGTH / sizeof(uint32_t)];
+        };
 
         /** Apply Keccak block permutation to the state array */
-        void apply(uint8_t *state);
+        static void apply(state_t &state);
 
-        /** Apply Keccak block permutation to the state array */
-        inline void apply(state_t &state) { apply(state.data()); }
-    }
+        // Streaming Keccak1600 primitive: -----------------------------------------------------------------------------
+
+        state_t st;     // Current keccak state
+        uint8_t ptr;    // Pointer to write next byte into state
+        uint8_t rate;   // Rate of this function in bytes
+
+        /** Reset this object to empty state */
+        void reset() {
+            secureZero(st.u8, LENGTH);
+            ptr = 0;
+        }
+
+        /** Absorb more data into this Keccak instance */
+        void consume(const uint8_t *buf, size_t length);
+
+        /** Finalize Keccak operation and prepare for data generation */
+        void finish(uint8_t trailer);
+
+        /** Produce next chunk of data from Keccak instance */
+        void produce(uint8_t *buf, size_t length);
+    };
 
     /** SHA-3 instance with arbitrary digest length */
     class sha3 {
@@ -40,7 +65,7 @@ namespace ub::crypto {
         void reset(size_t digestLength = 0);
 
         /** Update SHA-3 state with input data */
-        void update(const uint8_t *data, size_t length);
+        void update(const uint8_t *data, size_t length) { k.consume(data, length); }
 
         /** Finish hashing operation, producing the final digest */
         void finish(uint8_t *digest);
@@ -58,11 +83,7 @@ namespace ub::crypto {
         constexpr static uint32_t DIGEST_512 = 64;
 
     private:
-        using kstate_t = keccak1600::state_t;
-
-        kstate_t m_state;
-        uint8_t  m_digestLen;
-        uint8_t  m_ptr;
+        keccak1600  k;
     };
 
     /** SHAKE extensible output function instance */
@@ -96,14 +117,8 @@ namespace ub::crypto {
         static constexpr uint32_t FN_SHAKE256 = 2;
 
     private:
-        using kstate_t = keccak1600::state_t;
-
-        kstate_t m_state;
-        uint8_t  m_variant;
-        uint8_t  m_ptr;
-        bool     m_generating;
-
-        void process(uint8_t *buffer, size_t length, bool consume);
+        keccak1600  k;
+        bool        m_generating;
     };
 }
 

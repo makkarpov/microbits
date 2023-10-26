@@ -6,7 +6,9 @@ Small collection of cryptographic primitives, optimized mostly for minimal code 
 * **ChaCha20** stream cipher: encryption and decryption
 * Cryptographically secure random number generator implemented with ChaCha20 primitive
 * **SHA2**: SHA-256 and SHA-512
+* **HMAC** over arbitrary hash function
 * **SHA3**: SHA3 (any output length) and SHAKE (128 and 256 variants)
+* **KMAC** with 128 and 256 bit variants
 * **Ed25519** and **Ed448** digital signature schemes
 * **X25519** and **X448** key exchange protocols
 

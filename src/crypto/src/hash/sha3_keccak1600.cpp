@@ -1,5 +1,7 @@
 #include <ub/crypto/sha3.hpp>
 
+#include <cstring>
+
 using namespace ub::crypto;
 
 enum { KECCAK1600_ROUNDS = 24 };
@@ -95,13 +97,51 @@ void keccak1600_iota(uint32_t *st, uint32_t rc) {
     st[1] ^= (rc & 0x400) << 21;
 }
 
-void keccak1600::apply(uint8_t *state) {
-    auto state32 = (uint32_t *) state;
-
+void keccak1600::apply(state_t &state) {
     for (size_t i = 0; i < KECCAK1600_ROUNDS; i++) {
-        keccak1600_theta(state32);
-        keccak1600_rho_pi(state32);
-        keccak1600_chi(state32);
-        keccak1600_iota(state32, keccak1600_rcon[i]);
+        keccak1600_theta(state.u32);
+        keccak1600_rho_pi(state.u32);
+        keccak1600_chi(state.u32);
+        keccak1600_iota(state.u32, keccak1600_rcon[i]);
+    }
+}
+
+void keccak1600::consume(const uint8_t *buf, size_t length) {
+    while (length != 0) {
+        size_t ll = std::min(length, (size_t) (rate - ptr));
+        exclusiveOr(st.u8 + ptr, buf, ll);
+
+        ptr += ll;
+        buf += ll;
+        length -= ll;
+
+        if (ptr == rate) {
+            apply(st);
+            ptr = 0;
+        }
+    }
+}
+
+void keccak1600::finish(uint8_t trailer) {
+    st.u8[ptr]      ^= trailer;     // function-specific trailer field
+    st.u8[rate - 1] ^= 0x80;        // final '1' padding bit
+    apply(st);
+
+    ptr = 0;
+}
+
+void keccak1600::produce(uint8_t *buf, size_t length) {
+    while (length != 0) {
+        size_t ll = std::min(length, (size_t) (rate - ptr));
+        std::memcpy(buf, st.u8 + ptr, ll);
+
+        ptr += ll;
+        buf += ll;
+        length -= ll;
+
+        if (ptr == rate) {
+            apply(st);
+            ptr = 0;
+        }
     }
 }
