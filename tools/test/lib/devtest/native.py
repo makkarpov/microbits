@@ -20,6 +20,7 @@ class Symbol(NamedTuple):
 
 class ExecutionResult(NamedTuple):
     cycles: int
+    cpu_time: float
     stack_bytes: int
 
 
@@ -171,10 +172,13 @@ class TargetManager:
 
         n_cycles = self.link.read_u32(Regs.DWT_CYCCNT) | (cycles_overflow << 32)
 
+        cpu_time_scale = 1000
+        cpu_time = (n_cycles * cpu_time_scale // self.f_cpu) / cpu_time_scale
+
         stack_image_r = self.link.read_mem(self.ram_stack_ptr, self.ram_stack_sz)
         stack_used = TargetManager.__get_used_stack(stack_image, stack_image_r)
 
-        return ExecutionResult(n_cycles, stack_used)
+        return ExecutionResult(n_cycles, cpu_time, stack_used)
 
     def erase_scratchpad(self):
         self.fill_memory(self.ram_scratchpad_ptr, self.ram_stack_ptr, 0xFF)

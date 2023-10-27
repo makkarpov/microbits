@@ -39,11 +39,17 @@ function(configure_device_executable TARGET)
             "--specs=nano.specs" "--specs=nosys.specs")
 endfunction()
 
+function(dt_setup_vars)
+    set(DT_PYTHON_LIB "${UB_ROOT}/tools/test/lib" PARENT_SCOPE)
+endfunction()
+
 function(add_device_test)
     set(DT_FLAGS "")
     set(DT_OPTS_1 "NAME")
     set(DT_OPTS_N "SOURCES;CC_FLAGS;LD_FLAGS;DEFINES;LIBRARIES;RUNNER")
     cmake_parse_arguments(DT "${DT_FLAGS}" "${DT_OPTS_1}" "${DT_OPTS_N}" ${ARGN})
+
+    dt_setup_vars()
 
     if (NOT DEFINED DT_NAME)
         message(FATAL_ERROR "NAME option is required for add_device_test()")
@@ -84,8 +90,6 @@ function(add_device_test)
     list(POP_FRONT DT_RUNNER DT_RUNNER_FILE)
     file(REAL_PATH "${DT_RUNNER_FILE}" DT_RUNNER_ABS)
 
-    set(DT_PYTHON_LIB "${UB_ROOT}/tools/test/lib")
-
     set(DT_PYTHON_COMMAND "${CMAKE_COMMAND}" -E env
             "PYTHONPATH=${DT_PYTHON_LIB}"
             python3 -B "${DT_PYTHON_LIB}/devtest/application.py"
@@ -107,3 +111,17 @@ function(add_device_test)
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     )
 endfunction()
+
+function(dt_setup_all_tests)
+    dt_setup_vars()
+
+    add_custom_target(
+            "xtest"
+            WORKING_DIRECTORY "${UB_BINARY_DIR}"
+            COMMAND "${CMAKE_COMMAND}" -E env
+            "PYTHONPATH=${DT_PYTHON_LIB}"
+            python3 -B "${DT_PYTHON_LIB}/devtest/aggregator.py"
+    )
+endfunction()
+
+dt_setup_all_tests()

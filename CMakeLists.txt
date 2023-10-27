@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.25)
 
 set(UB_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
+set(UB_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+
 include(cmake/device_testing.cmake)
 
 project(microbits2 LANGUAGES C CXX ASM)

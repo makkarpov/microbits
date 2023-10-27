@@ -1,10 +1,13 @@
-import secrets
-import struct
+import asyncio
+import os
 from typing import Union, Optional
 
 from debug_link import DebugLink
 from native import Executable, TargetManager
 from runner import TestRunner, TestEnvironment
+
+import aggregator_util as _au
+import aggregator_msg as _am
 
 
 class _TestEnvironmentImpl(TestEnvironment):
@@ -13,6 +16,8 @@ class _TestEnvironmentImpl(TestEnvironment):
         self._link = link
         self._exe = exe
         self._target = target
+
+        self.exec_results = []
 
     @property
     def link(self) -> DebugLink:
@@ -28,16 +33,13 @@ class _TestEnvironmentImpl(TestEnvironment):
 
     def run(self, result_len: int = 0):
         r = self._target.run_executable()
+        self.exec_results.append(r)
 
         print('-' * 80)
         print('Execution completed - %s:' % self._name)
         print('  Executable size:  %d bytes' % self._exe.load_size)
         print('  Processor cycles: %d' % r.cycles)
-
-        cycle_scale = 1000
-        cpu_time = (r.cycles * cycle_scale // self._target.f_cpu) / cycle_scale
-        print('  Execution time:   %.3fs' % cpu_time)
-
+        print('  Execution time:   %.3fs' % r.cpu_time)
         print('  Peak stack usage: %d bytes' % r.stack_bytes)
         print('-' * 80)
 
@@ -87,10 +89,35 @@ class _TestEnvironmentImpl(TestEnvironment):
         return self._link.read_mem(addr, length)
 
 
+class _AggregatorConnection:
+    _reader: asyncio.StreamReader
+    _mr: _au.MessageReader
+    _writer: asyncio.StreamWriter
+    _mw: _au.MessageWriter
+
+    async def setup(self):
+        port = int(os.environ[_au.ENV_AGGREGATOR_PORT])
+        self._reader, self._writer = await asyncio.open_connection('127.0.0.1', port)
+
+        self._mr = _au.MessageReader(self._reader)
+        self._mw = _au.MessageWriter(self._writer)
+
+    async def write_result(self, msg: _am.ResultMessage):
+        await self._mw.write_msg(msg)
+
+    async def finish(self):
+        await self._writer.drain()
+
+        self._writer.close()
+        await self._writer.wait_closed()
+
+
 class DeviceTestApp:
     link: DebugLink
     executable: Executable
     target: TargetManager
+
+    _aggregator: Optional[_AggregatorConnection]
     _test_env: _TestEnvironmentImpl
     _runner: TestRunner
 
@@ -120,9 +147,31 @@ class DeviceTestApp:
 
         return runner.TestRunnerImpl(self._test_env, self.args.runner_args)
 
-    def run(self):
-        from debug_link import DebugLink
+    async def run(self):
+        if _au.ENV_AGGREGATOR_PORT in os.environ:
+            self._aggregator = _AggregatorConnection()
+            await self._aggregator.setup()
 
+        result = None
+        failure = None
+
+        try:
+            result = await self._run_test()
+        except Exception:
+            import traceback
+            failure = traceback.format_exc()
+
+        if self._aggregator is not None:
+            result_msg = _am.ResultMessage(
+                name=self.args.name,
+                success=failure is None,
+                failure=failure,
+                result=result
+            )
+
+            await self._aggregator.write_result(result_msg)
+
+    async def _run_test(self) -> _am.TestResult:
         self.link = DebugLink()
         self.target = TargetManager(self.link)
         self.executable = Executable(self.args.executable)
@@ -135,6 +184,14 @@ class DeviceTestApp:
 
         self._runner.run()
 
+        if len(self._test_env.exec_results) == 0:
+            raise RuntimeError('no test was executed')
+
+        return _am.TestResult(
+            executable_sz=self.executable.load_size,
+            execution=self._test_env.exec_results[0]
+        )
+
 
 if __name__ == '__main__':
-    DeviceTestApp().run()
+    asyncio.run(DeviceTestApp().run())
