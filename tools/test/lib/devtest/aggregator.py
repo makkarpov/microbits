@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from typing import List
 
 import aggregator_util as _au
@@ -47,6 +48,16 @@ class TestAggregator:
         from prettytable import SINGLE_BORDER
         from prettytable.colortable import ColorTable, Theme, RESET_CODE
 
+        for x in self._results:
+            if x.success:
+                continue
+
+            print('')
+            print('### %s - FAILURE' % x.name)
+            print('=' * 120)
+            print(x.failure)
+            print('=' * 120)
+
         tbl = ColorTable()
         tbl.set_style(SINGLE_BORDER)
         tbl.field_names = ['Test', 'Result', 'Code', 'Stack', 'Cycles', 'Time (s)']
@@ -61,7 +72,8 @@ class TestAggregator:
             if x.failure:
                 tbl.add_row([
                     x.name,
-                    Theme.format_code('31') + 'FAIL' + RESET_CODE
+                    Theme.format_code('31') + 'FAIL' + RESET_CODE,
+                    '---', '---', '---', '---'
                 ])
                 continue
 
@@ -87,6 +99,10 @@ class TestAggregator:
 
         await self._server.wait_closed()
         self._print_results()
+
+        have_failures = any(not x.success for x in self._results)
+        if have_failures:
+            sys.exit(1)
 
 
 if __name__ == '__main__':
