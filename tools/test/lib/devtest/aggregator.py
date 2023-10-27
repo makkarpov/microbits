@@ -44,10 +44,17 @@ class TestAggregator:
             raise RuntimeError(f'ctest process exited with code {proc.returncode}')
 
     def _print_results(self):
+        from prettytable import SINGLE_BORDER
         from prettytable.colortable import ColorTable, Theme, RESET_CODE
 
         tbl = ColorTable()
-        tbl.field_names = ['Test', 'Result', 'Code', 'Stack', 'Cycles', 'Time']
+        tbl.set_style(SINGLE_BORDER)
+        tbl.field_names = ['Test', 'Result', 'Code', 'Stack', 'Cycles', 'Time (s)']
+
+        tbl.align['Code'] = 'r'
+        tbl.align['Stack'] = 'r'
+        tbl.align['Cycles'] = 'r'
+        tbl.align['Time (s)'] = 'r'
         tbl.align['Test'] = 'l'
 
         for x in self._results:
@@ -65,7 +72,7 @@ class TestAggregator:
                 str(x.result.executable_sz),
                 str(ex.stack_bytes),
                 str(ex.cycles),
-                str(ex.cpu_time)
+                '%.3f' % ex.cpu_time
             ])
 
         print(tbl)
