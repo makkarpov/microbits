@@ -102,7 +102,7 @@ def process_include_dir(root_dir: str, module: str):
 def scan_dir(s_dir: str, module_prefix: List[str]):
     cmake_file = path.join(s_dir, 'CMakeLists.txt')
     if path.exists(cmake_file) and path.isfile(cmake_file):
-        module_name = '_'.join(module_prefix).upper()
+        module_name = process_name('_'.join(module_prefix)).upper()
         process_include_dir(path.join(s_dir, 'include'), module_name)
         process_src_dir(path.join(s_dir, 'src'), module_name, 'SRC')
         process_src_dir(path.join(s_dir, 'test'), module_name, 'TEST')

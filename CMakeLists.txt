@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.14)
 
 set(UB_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 set(UB_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
@@ -28,7 +28,15 @@ if ("${ENABLE_TESTING}")
     enable_testing()
 endif ()
 
+add_subdirectory(src/utilities)
+
 add_subdirectory(src/crypto)
+
+add_subdirectory(src/usb/device-base)
+add_subdirectory(src/usb/device-serial)
+
+add_subdirectory(src/stm32/utilities)
+add_subdirectory(src/stm32/usb-device)
 
 if ("${ENABLE_PLAYGROUND}")
     add_subdirectory(playground)
