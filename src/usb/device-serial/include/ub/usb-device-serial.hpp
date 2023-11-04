@@ -27,11 +27,17 @@ namespace ub::usbd {
         /** Set buffer to be used as a transmit buffer */
         void setTransmitBuffer(void *buffer, size_t length) { m_txQueue.setBuffer(buffer, length); }
 
-        /** Receive next data chunk. Returns number of bytes actually received. */
-        size_t receive(void *buffer, size_t length);
-
         /** @return Number of pending received bytes */
         [[nodiscard]] size_t receivePendingBytes() const { return m_rxQueue.pendingBytes() + m_rxPacketLength; }
+
+        /** @return Direct reference to receive queue for zero-copy data processing */
+        [[nodiscard]] const ub::CircularBuffer &receiveQueue() const { return m_rxQueue; }
+
+        /** Discard first `length` received bytes. Does nothing if queue contains less pending bytes than specified. */
+        void discardReceived(size_t length);
+
+        /** Receive next data chunk. Returns number of bytes actually received. */
+        size_t receive(void *buffer, size_t length);
 
         /** Transmit next data chunk. Fails if free buffer space is insufficient to hold the message */
         bool transmit(const void *buffer, size_t length);
@@ -68,6 +74,7 @@ namespace ub::usbd {
         void transmitComplete(uint8_t endpoint) override;
 
         void transmitNextChunk();
+        void processPendingPacket();
     };
 }
 

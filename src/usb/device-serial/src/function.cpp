@@ -19,16 +19,19 @@ struct ControlReq {
 
 static_assert(sizeof(LineCoding) == LineCoding::LENGTH);
 
+void SerialFunction::discardReceived(size_t length) {
+    if (m_rxQueue.pendingBytes() < length) {
+        return;
+    }
+
+    m_rxQueue.readBytes(length);
+    processPendingPacket();
+}
+
 size_t SerialFunction::receive(void *buffer, size_t length) {
     size_t queueLength = std::min(length, m_rxQueue.pendingBytes());
     m_rxQueue.readBytes(buffer, queueLength);
-
-    if (m_rxPacketLength != 0 && m_rxQueue.freeBytes() >= m_rxPacketLength) {
-        m_rxQueue.writeBytes(m_rxPacket, m_rxPacketLength);
-        m_rxPacketLength = 0;
-        m_host->receivePacket(EP_DATA_OUT, m_rxPacket);
-    }
-
+    processPendingPacket();
     return queueLength;
 }
 
@@ -129,5 +132,13 @@ void SerialFunction::transmitNextChunk() {
     } else {
         m_txPacketLength = 0;
         m_txReady = true;
+    }
+}
+
+void SerialFunction::processPendingPacket() {
+    if (m_rxPacketLength != 0 && m_rxQueue.freeBytes() >= m_rxPacketLength) {
+        m_rxQueue.writeBytes(m_rxPacket, m_rxPacketLength);
+        m_rxPacketLength = 0;
+        m_host->receivePacket(EP_DATA_OUT, m_rxPacket);
     }
 }
