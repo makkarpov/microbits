@@ -45,6 +45,12 @@ namespace ub::usbd {
         /** @return Free space in the transmit queue */
         [[nodiscard]] size_t transmitFreeBytes() const { return m_txQueue.freeBytes(); }
 
+        /** @return Total number of transmitted bytes that were acknowledged by the host */
+        [[nodiscard]] size_t transmitHeadPos() const { return m_txQueue.headPosition(); }
+
+        /** @return Total number of transmitted bytes, including those that are still waiting in the queue. */
+        [[nodiscard]] size_t transmitTailPos() const { return m_txQueue.tailPosition(); }
+
         /** Reference to a line coding structure, specifying UART parameters */
         [[nodiscard]] serial::LineCoding &lineCoding() { return m_lineCoding; }
 
