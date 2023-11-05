@@ -45,12 +45,14 @@ void USBDevice::stop() {
     m_control.reset(LinkSpeed::NONE);
 }
 
-void USBDevice::processEvents() {
+uint32_t USBDevice::processEvents() {
     PeripheralEvent ev {};
+    uint32_t ret = 0;
 
     while (m_pcd->pullEvent(ev)) {
         switch (ev.t) {
         case PeripheralEvent::EV_RESET:
+            ret |= EV_RESET;
             processReset(ev.speed);
             break;
 
@@ -61,12 +63,10 @@ void USBDevice::processEvents() {
         case PeripheralEvent::EV_TRANSMIT_COMPLETE:
             processTransmitComplete(ev.addr);
             break;
-
-        default:
-            asm volatile ("bkpt");
-            break;
         }
     }
+
+    return ret;
 }
 
 void USBDevice::processReset(LinkSpeed speed) {
@@ -77,10 +77,6 @@ void USBDevice::processReset(LinkSpeed speed) {
 void USBDevice::processPacketReceived(const PeripheralEvent::RxPacket &ev) {
     if (ev.setup || ev.addr == EP_CONTROL_OUT) {
         m_control.packetReceived(ev.size, ev.setup);
-        return;
-    }
-
-    if (m_configured != CfgState::CONFIGURED) {
         return;
     }
 
@@ -96,10 +92,6 @@ void USBDevice::processPacketReceived(const PeripheralEvent::RxPacket &ev) {
 void USBDevice::processTransmitComplete(uint8_t endpoint) {
     if (endpoint == EP_CONTROL_IN) {
         m_control.transmitComplete();
-        return;
-    }
-
-    if (m_configured != CfgState::CONFIGURED) {
         return;
     }
 

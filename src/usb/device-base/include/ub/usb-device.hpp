@@ -67,8 +67,13 @@ namespace ub::usbd {
          * This method is usually triggered by a hardware interrupt associated with the USB peripheral. External
          * synchronization is required when processing such interrupt, e.g. by deferring the processing to a dedicated
          * RTOS task and using regular RTOS mutexes to synchronize it with other tasks in the system.
+         *
+         * @return Bitmask of occurred events (see `EV_*` constants)
          */
-        void processEvents();
+        uint32_t processEvents();
+
+        /** USB reset has been received */
+        constexpr static uint32_t EV_RESET                      = 0x00000001;
 
     private:
         using StdControlHandler = impl::StandardControlHandler;

@@ -13,6 +13,12 @@ void CircularBuffer::setBuffer(void *buffer, size_t length) {
     m_wrPtr     = 0;
 }
 
+void CircularBuffer::reset() {
+    m_headPos   = 0;
+    m_rdPtr     = 0;
+    m_wrPtr     = 0;
+}
+
 size_t CircularBuffer::pendingBytes() const {
     if (m_rdPtr <= m_wrPtr) {
         return m_wrPtr - m_rdPtr;

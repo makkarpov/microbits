@@ -55,13 +55,20 @@ uint32_t SerialFunction::functionType() const {
 
 FunctionLogic *SerialFunction::initialize(FunctionHost &host, THROWS) {
     m_host = &host;
+    m_pendingEvents |= EV_RESET;
+
+    if (m_discardOnReset) {
+        m_rxQueue.reset();
+        m_txQueue.reset();
+        m_rxPacketLength = 0;
+        m_txReady = true;
+    }
 
     if (m_rxPacketLength == 0) {
         m_host->receivePacket(EP_DATA_OUT, m_rxPacket);
     }
 
-    m_txReady = true;
-
+    transmitNextChunk();
     return this;
 }
 
@@ -92,6 +99,7 @@ void SerialFunction::handleControl(const SetupPacket &setup, uint8_t *buffer, ui
     switch (setup.bRequest) {
     case ControlReq::SET_CONTROL_LINE_STATE:
         m_controlSignals = setup.wValue;
+        m_pendingEvents |= EV_CONTROL_SIGNALS_CHANGED;
         break;
 
     case ControlReq::GET_LINE_CODING:
@@ -101,6 +109,7 @@ void SerialFunction::handleControl(const SetupPacket &setup, uint8_t *buffer, ui
 
     case ControlReq::SET_LINE_CODING:
         std::memcpy(&m_lineCoding, buffer, LineCoding::LENGTH);
+        m_pendingEvents |= EV_LINE_CODING_CHANGED;
         break;
     }
 }
@@ -113,6 +122,8 @@ void SerialFunction::packetReceived(uint8_t endpoint, size_t length) {
 
     if (m_rxQueue.freeBytes() >= length) {
         m_rxQueue.writeBytes(m_rxPacket, length);
+        m_pendingEvents |= EV_DATA_RX;
+
         m_host->receivePacket(EP_DATA_OUT, m_rxPacket);
     } else {
         m_rxPacketLength = length;
@@ -121,12 +132,13 @@ void SerialFunction::packetReceived(uint8_t endpoint, size_t length) {
 
 void SerialFunction::transmitComplete(uint8_t endpoint) {
     m_txQueue.readBytes(m_txPacketLength);
+    m_pendingEvents |= EV_DATA_TX;
     transmitNextChunk();
 }
 
 void SerialFunction::transmitNextChunk() {
     if (m_txQueue.pendingBytes() != 0) {
-        m_txPacketLength = m_txQueue.readLimit();
+        m_txPacketLength = std::min(m_txQueue.readLimit(), (size_t) UB_USBD_SERIAL_PACKET_LENGTH);
         m_host->transmitPacket(EP_DATA_IN, m_txQueue.readPtr(), m_txPacketLength);
         m_txReady = false;
     } else {
@@ -141,4 +153,10 @@ void SerialFunction::processPendingPacket() {
         m_rxPacketLength = 0;
         m_host->receivePacket(EP_DATA_OUT, m_rxPacket);
     }
+}
+
+uint32_t SerialFunction::pullEvents() {
+    uint32_t r = m_pendingEvents;
+    m_pendingEvents = 0;
+    return r;
 }

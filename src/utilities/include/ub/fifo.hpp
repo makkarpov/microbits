@@ -29,6 +29,11 @@ namespace ub {
          */
         void setBuffer(void *buffer, size_t length);
 
+        /**
+         * Reset all internal state, discarding all currently pending data. Absolute byte counters are reset to zero.
+         */
+        void reset();
+
         /** @return FIFO head position (number of bytes popped from this FIFO since it's creation) */
         [[nodiscard]] inline size_t headPosition() const { return m_headPos; }
 
