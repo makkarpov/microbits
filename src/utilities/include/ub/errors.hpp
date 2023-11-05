@@ -69,6 +69,7 @@ namespace ub {
         E_OUT_OF_MEMORY     = 1,    //! Application has run out of heap
         E_INVALID_ARGUMENT  = 2,    //! Argument validation failed
         E_INVALID_STATE     = 3,    //! Operation is not possible in current state
+        E_RUNTIME_ERROR     = 4,    //! Generic runtime error
     };
 }
 
