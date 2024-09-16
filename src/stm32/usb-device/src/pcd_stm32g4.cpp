@@ -171,8 +171,6 @@ void STM32USBPeripheral::openEndpoint(const EndpointConfig &config, THROWS) {
 void STM32USBPeripheral::connect() {
     SET_BIT(USB->CNTR, USB_CNTR_RESETM | USB_CNTR_CTRM);
     SET_BIT(USB->BCDR, USB_BCDR_DPPU);
-    NVIC_EnableIRQ(USB_HP_IRQn);
-    NVIC_EnableIRQ(USB_LP_IRQn);
 }
 
 void STM32USBPeripheral::disconnect() {
@@ -181,9 +179,6 @@ void STM32USBPeripheral::disconnect() {
     USB->CNTR = 0;
     USB->DADDR = 0;
     USB->ISTR = 0;
-
-    NVIC_DisableIRQ(USB_HP_IRQn);
-    NVIC_DisableIRQ(USB_LP_IRQn);
 }
 
 void STM32USBPeripheral::setAddress(uint8_t address, SetAddressPhase phase) {
