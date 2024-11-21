@@ -16,6 +16,7 @@ static LogicalIndex usbd_transformMapping(uint8_t mappedV, uint8_t resultExtra) 
 }
 
 LogicalIndex impl::toLogicalEndpoint(uint8_t physical, const ResourceMapping &mapping) {
+#if UB_USBD_HAVE_DATA_ENDPOINTS
     size_t length;
     const uint8_t *map;
 
@@ -33,6 +34,9 @@ LogicalIndex impl::toLogicalEndpoint(uint8_t physical, const ResourceMapping &ma
     }
 
     return usbd_transformMapping(map[idx], physical & EP_IN);
+#else
+    return LOGICAL_NOT_MAPPED;
+#endif
 }
 
 uint8_t impl::toPhysicalEndpoint(uint8_t functionIdx, uint8_t logical, const ResourceMapping &mapping) {
@@ -40,7 +44,11 @@ uint8_t impl::toPhysicalEndpoint(uint8_t functionIdx, uint8_t logical, const Res
         return 0xFF;
     }
 
+#if UB_USBD_HAVE_DATA_ENDPOINTS
     return mapping.funcEndpoints[functionIdx][logical];
+#else
+    return 0xFF;
+#endif
 }
 
 LogicalIndex impl::toLogicalInterface(uint8_t physical, const ResourceMapping &mapping) {
@@ -48,5 +56,9 @@ LogicalIndex impl::toLogicalInterface(uint8_t physical, const ResourceMapping &m
         return LOGICAL_NOT_MAPPED;
     }
 
+#if UB_USBD_MAX_FUNCTIONS > 1
     return usbd_transformMapping(mapping.interfaces[physical], 0);
+#else
+    return LogicalIndex::of(0, physical);
+#endif
 }

@@ -272,7 +272,7 @@ public class DescriptorCodeGenerator {
         printFuncEndpoints(prefix, st.endpointAllocation.functions);
         output.println("#endif");
 
-        output.println("#if UB_USBD_MAX_FUNCTIONS");
+        output.println("#if UB_USBD_MAX_FUNCTIONS > 1");
 
         printFunctionMapping(prefix, st.interfaces.physical, st.interfaces.numInterfaces(), i -> true,
                 InterfaceMapping.FnIntf::st, i -> i.defn().logicalNumber);
