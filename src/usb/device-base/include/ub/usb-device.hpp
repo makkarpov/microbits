@@ -2,11 +2,11 @@
 #define UB_USB_DEVICE_BASE_USB_DEVICE_H
 
 #include <ub/usbd/errors.hpp>
+#include <ub/usbd/function.hpp>
 #include <ub/usbd/pcd-interface.hpp>
-#include <ub/usbd/impl/static-descriptor.hpp>
+#include <ub/usbd/static-config.hpp>
 #include <ub/usbd/impl/control-endpoint.hpp>
 #include <ub/usbd/impl/control-std.hpp>
-#include <ub/usbd/function.hpp>
 
 #include <utility>
 #include <iterator>
@@ -22,8 +22,14 @@ namespace ub::usbd {
     class USBDevice {
     public:
         constexpr explicit USBDevice():
-            m_pcd(nullptr), m_desc(nullptr), m_func {}, m_funcLogic {}, m_control {}, m_ctrlHandler {},
-            m_serialNumber(nullptr), m_funcIdx(0), m_configured(CfgState::RESET)
+                m_pcd(nullptr), m_cfg(nullptr), m_funcs {}, m_control {}, m_ctrlHandler {},
+#if UB_USBD_RUNTIME_SERIAL_NUMBER
+                m_serialNumber(nullptr),
+#endif
+#if UB_USBD_HAVE_RESOURCE_MAPPING
+                m_activeMapping(nullptr),
+#endif
+                m_nextFunctionIdx(0), m_configured(CfgState::RESET)
         {}
 
         /**
@@ -38,14 +44,16 @@ namespace ub::usbd {
          *
          * Must be called after all functions are registered.
          */
-        void initialize(PeripheralController &peripheral, const StaticDescriptor &descriptor, THROWS);
+        void initialize(PeripheralController &peripheral, const config::StaticConfiguration &config, THROWS);
 
+#if UB_USBD_RUNTIME_SERIAL_NUMBER
         /**
          * Set device serial number as an ASCII string.
          *
          * Effective only when descriptor is generated with runtime serial number support.
          */
         void setSerialNumber(const char *serial) { m_serialNumber = serial; }
+#endif
 
         /**
          * Start the USB stack and connect device to the bus.
@@ -62,13 +70,14 @@ namespace ub::usbd {
         void stop();
 
         /**
-         * Process peripheral events.
+         * Process peripheral events. Returns a bitmask of occurred device-global events, and updates individual
+         * functions that might return their own events as well (via their event processing functions).
          *
          * This method is usually triggered by a hardware interrupt associated with the USB peripheral. External
          * synchronization is required when processing such interrupt, e.g. by deferring the processing to a dedicated
          * RTOS task and using regular RTOS mutexes to synchronize it with other tasks in the system.
          *
-         * @return Bitmask of occurred events (see `EV_*` constants)
+         * @return Bitmask of occurred events (see `EV_*` constants).
          */
         uint32_t processEvents();
 
@@ -78,17 +87,21 @@ namespace ub::usbd {
     private:
         using StdControlHandler = impl::StandardControlHandler;
         using ControlEndpointImpl = impl::ControlEndpointImpl;
+        using StaticConfig = config::StaticConfiguration;
+        using ResourceMapping = config::ResourceMapping;
 
         enum class CfgState : uint8_t {
-            RESET           = 0,    //! Device was RESET
+            RESET           = 0,    //! Device was reset (in USB sense) and never configured since
             DECONFIGURED    = 1,    //! Device was configured, but configuration was reset by host
             CONFIGURED      = 2     //! Device is configured now
         };
 
         struct FnHostImpl: public FunctionHost {
-            constexpr FnHostImpl(): dev(nullptr) {}
+            constexpr FnHostImpl(): dev(nullptr), func(nullptr), logic(nullptr) {}
 
-            USBDevice *dev;
+            USBDevice     *dev;
+            Function      *func;
+            FunctionLogic *logic;
 
             [[nodiscard]] LinkSpeed linkSpeed() const override;
             void stallEndpoint(uint8_t endpoint, bool stall) override;
@@ -97,20 +110,28 @@ namespace ub::usbd {
             void transmitPacket(uint8_t endpoint, const void *buffer, uint32_t length) override;
 
         private:
-            inline uint32_t functionIdx() { return std::distance(dev->m_funcHosts, this); }
-            inline const descriptor::StaticFunction &functionDesc() { return dev->m_desc->functions[functionIdx()]; }
+            [[nodiscard]] inline uint32_t functionIdx() const {
+                return std::distance((const FnHostImpl *) dev->m_funcs, this);
+            }
+
+            [[nodiscard]] uint8_t toPhysicalEndpoint(uint8_t endpoint) const;
         };
 
         PeripheralController    *m_pcd;
-        const StaticDescriptor  *m_desc;
-        Function                *m_func[UB_USBD_MAX_FUNCTIONS];
-        FunctionLogic           *m_funcLogic[UB_USBD_MAX_FUNCTIONS];
-        FnHostImpl              m_funcHosts[UB_USBD_MAX_FUNCTIONS];
+        const StaticConfig      *m_cfg;
+        FnHostImpl              m_funcs[UB_USBD_MAX_FUNCTIONS];
         ControlEndpointImpl     m_control;
         StdControlHandler       m_ctrlHandler;
-        const char              *m_serialNumber;
 
-        uint8_t     m_funcIdx;
+#if UB_USBD_RUNTIME_SERIAL_NUMBER
+        const char              *m_serialNumber;
+#endif
+
+#if UB_USBD_HAVE_RESOURCE_MAPPING
+        const ResourceMapping   *m_activeMapping;
+#endif
+
+        uint8_t     m_nextFunctionIdx;
         CfgState    m_configured;
 
         void processReset(LinkSpeed speed);

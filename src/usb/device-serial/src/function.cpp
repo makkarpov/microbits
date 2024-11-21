@@ -49,9 +49,11 @@ bool SerialFunction::transmit(const void *buffer, size_t length) {
     return true;
 }
 
+#if UB_USBD_ENABLE_TYPE_IDENTIFIERS
 uint32_t SerialFunction::functionType() const {
     return 0x229FEE06; // 'microbits.cdc-acm.v1'
 }
+#endif
 
 FunctionLogic *SerialFunction::initialize(FunctionHost &host, THROWS) {
     m_host = &host;

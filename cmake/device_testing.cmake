@@ -63,7 +63,7 @@ function(add_device_test)
 
     set(TGT_NAME "test_dev_${DT_NAME}_bin")
 
-    add_executable("${TGT_NAME}" ${DT_SOURCES})
+    add_executable("${TGT_NAME}" EXCLUDE_FROM_ALL ${DT_SOURCES})
 
     target_include_directories("${TGT_NAME}" PRIVATE "${UB_ROOT}/tools/test/device_lib")
     configure_device_executable("${TGT_NAME}")

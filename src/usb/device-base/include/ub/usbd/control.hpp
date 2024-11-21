@@ -39,11 +39,12 @@ namespace ub::usbd {
          * Transmit next data packet. Buffer must remain valid until `transmitComplete()` or `aborted()` callback is
          * called. Transmitted length must not exceed maximum packet length. Should never be called on inbound requests.
          *
-         * Note that per USB specification, end of transfer is signalled with less-than-maximum-length packet.
-         * Therefore, only last packet could have length less than value maximum. All preceding packets must have
-         * full length. Control state machine will use this logic to detect a moment to initiate status phase.
+         * Note that per USB specification, end of transfer is signalled with a less-than-maximum-length packet.
+         * Therefore, only last packet could have length less than `packetLength()`. All preceding packets _must_ have
+         * maximum possible length. If complete payload fits full-length packets exactly, it must be terminated by an
+         * additional zero-length packet.
          *
-         * It may be necessary to transmit zero length packet if response payload length is a multiple of packet length.
+         * Control state machine will use this logic to detect a moment to initiate status phase.
          *
          * @param buffer Buffer to transmit
          * @param length Packet length
@@ -68,10 +69,10 @@ namespace ub::usbd {
         bool                accepted;       //! Handler should set this to 'true' to accept the setup request
         ControlDirection    direction;      //! Expected data transfer direction
         uint32_t            maxLength;      //! Maximum data length application is willing to accept
-        ControlEndpoint     *endpoint;      //! Control value to use while streaming
+        ControlEndpoint     *endpoint;      //! Control endpoint to use while streaming
         ControlStreamer     *streamer;      //! If advanced processing is desired, streamer pointer must be placed here
 
-        /** Reset all optional fields to their default value */
+        /** Reset all optional fields to their default values */
         void reset();
     };
 
@@ -81,22 +82,21 @@ namespace ub::usbd {
          * Decode, interpret and prepare to handle control request.
          *
          * If request is unknown or malformed, this method should simply return without doing anything. Otherwise, it
-         * should set `request.accepted` flag to indicate that processing should be continued. When accepting the
+         * should set `request.accepted` flag to indicate that request is understood and valid. When accepting the
          * request, handler should populate `direction` and `maxLength` fields with values suitable for the expected
          * data phase. USB stack will enforce these parameters on actual data stage and reject the request upon
          * detecting a mismatch.
          *
-         * Upon accepting, application has two ways to continue with request processing:
+         * Upon accepting, application could choose either of two ways to continue with request processing:
          *
          *   1. When request is a simple request which does not require data streaming, this method should leave
          *      `request.streamer` field in the default state (`nullptr`). Request data must fit into a single packet,
          *      otherwise request will be rejected. When request is ready to be handled (i.e. data phase is received),
          *      `handleControl` method will be invoked to do actual processing.
          *
-         *   2. When request either requires data streaming or completion callback, `ControlStreamer` instance must be
-         *      provided via `request.streamer` field. Streamer should use `request.value` instance to interact with
-         *      device control value. Streamer instance must stay valid until `completed()` or `aborted()` is invoked
-         *      on the streamer.
+         *   2. When request requires data streaming, `ControlStreamer` instance must be provided via `request.streamer`
+         *      field. Streamer should use `request.endpoint` instance to interact with device control endpoint.
+         *      Streamer instance must stay valid until `completed()` or `aborted()` methods are invoked on it.
          */
         virtual void setupControl(ControlRequest &request) = 0;
 
@@ -148,7 +148,7 @@ namespace ub::usbd {
         /**
          * Data packet has been received. Never called on outbound requests.
          *
-         * @param buffer Packet buffer. This is the same buffer as `value.packetBuffer()` and provided as a parameter
+         * @param buffer Packet buffer. This is the same buffer as `endpoint.packetBuffer()` and provided as a parameter
          *               for implementation convenience
          * @param length Length of received packet
          */

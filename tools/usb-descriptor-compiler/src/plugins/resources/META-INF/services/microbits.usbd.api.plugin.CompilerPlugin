@@ -1,0 +1,5 @@
+# functions:
+microbits.usbd.plugins.serial.SerialDescriptorPlugin
+
+# targets:
+microbits.usbd.plugins.stm32.STM32Plugin

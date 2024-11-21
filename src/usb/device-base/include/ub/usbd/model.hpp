@@ -5,23 +5,24 @@
 #include <cstddef>
 
 namespace ub::usbd {
-    /** IN (device -> host) value direction flag */
+    /** IN (device -> host) endpoint direction flag */
     constexpr static uint8_t EP_IN  = 0x80;
 
-    /** OUT (host -> device) value direction flag */
+    /** OUT (host -> device) endpoint direction flag */
     constexpr static uint8_t EP_OUT = 0x00;
 
-    /** Address of control IN value */
+    /** Address of control IN endpoint */
     constexpr static uint8_t EP_CONTROL_IN = 0x00 | EP_IN;
 
-    /** Address of control OUT value */
+    /** Address of control OUT endpoint */
     constexpr static uint8_t EP_CONTROL_OUT = 0x00 | EP_OUT;
 
     /** Endpoint number mask */
-    constexpr static uint8_t EP_NUM = 0x7F;
+    constexpr static uint8_t EP_NUM = 0x0F;
 
-    /** Endpoint type enumeration. Numeric values are consistent with values used in value descriptors. */
+    /** Endpoint type enumeration. Numeric values are consistent with values used in endpoint descriptors. */
     enum class EndpointType: uint8_t {
+        // Control endpoints are opened by the stack
         ISOCHRONOUS = 1,
         BULK        = 2,
         INTERRUPT   = 3
@@ -46,7 +47,7 @@ namespace ub::usbd {
     enum class SetupRecipient: uint8_t {
         DEVICE      = 0,    //! Setup request is directed to whole device
         INTERFACE   = 1,    //! Setup request is directed to interface
-        ENDPOINT    = 2     //! Setup request is directed to value
+        ENDPOINT    = 2     //! Setup request is directed to endpoint
     };
 
     /** Setup packet structure as it is serialized on wire */

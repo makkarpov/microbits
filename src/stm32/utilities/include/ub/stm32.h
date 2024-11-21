@@ -19,6 +19,8 @@
 #include <stm32f4xx.h>
 #elif defined(STM32F7)
 #include <stm32f7xx.h>
+#elif defined(STM32H5)
+#include <stm32h5xx.h>
 #elif defined(STM32H7)
 #include <stm32h7xx.h>
 #elif defined(STM32L0)
@@ -36,7 +38,7 @@
 #elif defined(STM32WB)
 #include <stm32wbxx.h>
 #else
-#error "STM32 family is not defined"
+#error "STM32 family is not recognized or not defined"
 #endif
 
 // HAL:
@@ -54,6 +56,8 @@
 #include <stm32f4xx_hal.h>
 #elif defined(STM32F7)
 #include <stm32f7xx_hal.h>
+#elif defined(STM32H5)
+#include <stm32h5xx_hal.h>
 #elif defined(STM32H7)
 #include <stm32h7xx_hal.h>
 #elif defined(STM32L0)
@@ -71,7 +75,7 @@
 #elif defined(STM32WB)
 #include <stm32wbxx_hal.h>
 #else
-#error "STM32 family is not defined"
+#error "STM32 family is not recognized or not defined"
 #endif
 #endif
 

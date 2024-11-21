@@ -1,13 +1,25 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.23)
 
 set(UB_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 set(UB_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 
-include(cmake/device_testing.cmake)
+if ("${ENABLE_PLAYGROUND}" AND (EXISTS "${UB_ROOT}/playground/toolchain.cmake"))
+    include("${UB_ROOT}/playground/toolchain.cmake")
+endif ()
 
-project(microbits2 LANGUAGES C CXX ASM)
+define_property(GLOBAL PROPERTY UB_ROOT)
+set_property(GLOBAL PROPERTY UB_ROOT "${UB_ROOT}")
+
+include(cmake/device_testing.cmake)
+include(cmake/tools.cmake)
+include(cmake/install.cmake)
+
+project(microbits2
+        LANGUAGES C CXX ASM
+        VERSION 2.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_INSTALL_PREFIX "")
 
 if (NOT DEFINED ENABLE_TESTING)
     set(ENABLE_TESTING OFF)
@@ -37,6 +49,8 @@ add_subdirectory(src/usb/device-serial)
 
 add_subdirectory(src/stm32/utilities)
 add_subdirectory(src/stm32/usb-device)
+
+ub_install_finalize()
 
 if ("${ENABLE_PLAYGROUND}")
     add_subdirectory(playground)

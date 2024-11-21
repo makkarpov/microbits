@@ -7,3 +7,5 @@ target_sources(ub_stm32_usb_device INTERFACE ${SOURCES})
 target_include_directories(ub_stm32_usb_device INTERFACE include)
 
 target_link_libraries(ub_stm32_usb_device INTERFACE UB::USBD::Base)
+
+ub_install_library(UB::STM32::USBDevice)

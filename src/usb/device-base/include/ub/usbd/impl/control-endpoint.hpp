@@ -10,6 +10,17 @@ namespace ub::usbd {
 }
 
 namespace ub::usbd::impl {
+    /** Converts negotiated link speed into an index for various configuration/descriptor arrays */
+#if UB_USBD_ENABLE_HIGH_SPEED
+    inline uint8_t linkSpeedIndex(LinkSpeed speed) {
+        return speed == LinkSpeed::HIGH ? 1 : 0;
+    }
+#else
+    inline uint8_t linkSpeedIndex(LinkSpeed speed) {
+        return 0;
+    }
+#endif
+
     /**
      * Control request handler and state machine.
      *

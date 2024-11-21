@@ -1,6 +1,7 @@
 #ifndef UB_USB_DEVICE_BASE_USBD_FUNCTION_H
 #define UB_USB_DEVICE_BASE_USBD_FUNCTION_H
 
+#include <ub/usbd/config.hpp>
 #include <ub/usbd/model.hpp>
 #include <ub/usbd/control.hpp>
 
@@ -15,7 +16,7 @@ namespace ub::usbd {
         [[nodiscard]] virtual LinkSpeed linkSpeed() const = 0;
 
         /**
-         * Set or clear value STALL status.
+         * Set or clear endpoint's STALL status.
          *
          * @param endpoint Logical endpoint index
          * @param stall    Desired STALL status
@@ -23,14 +24,17 @@ namespace ub::usbd {
         virtual void stallEndpoint(uint8_t endpoint, bool stall) = 0;
 
         /**
-         * @return Whether value is currently stalled.
+         * @return Whether endpoint is currently stalled.
          */
         virtual bool stalled(uint8_t endpoint) = 0;
 
         /**
-         * Prepare value to receive single packet. Packet will be placed in specified buffer on reception. Length of
-         * buffer is implicitly assumed to be the maximum packet length configured for the value. Buffer must remain
+         * Prepare endpoint to receive single packet. Packet will be placed in specified buffer on reception. Length of
+         * buffer is implicitly assumed to be the maximum packet length configured for the endpoint. Buffer must remain
          * valid until either `shutdown()` or `packetReceived()` is called on the function.
+         *
+         * Function must never call this method twice on same endpoint without first receiving
+         * `packetReceived()` callback.
          *
          * @param endpoint Logical endpoint index
          * @param buffer   Buffer to place received packet
@@ -38,11 +42,11 @@ namespace ub::usbd {
         virtual void receivePacket(uint8_t endpoint, void *buffer) = 0;
 
         /**
-         * Schedule packet to be transmitted from the value. Buffer must remain valid until either `shutdown()` or
+         * Schedule packet to be transmitted from the endpoint. Buffer must remain valid until either `shutdown()` or
          * `transmitComplete` is called on the function object. Packets larger than maximum configured packet length
          * are silently truncated.
          *
-         * Functions must not call `transmitPacket` multiple times on same endpoint without receiving `transmitComplete`
+         * Functions must never call `transmitPacket` twice on same endpoint without receiving `transmitComplete`
          * callback.
          *
          * @param endpoint Logical endpoint index
@@ -53,7 +57,7 @@ namespace ub::usbd {
     };
 
     /**
-     * Helper class to improve encapsulation of the internal USB stack callback from external user code.
+     * Helper class to improve encapsulation of the internal USB stack callbacks from external user code.
      *
      * Class could implement both Function and FunctionLogic class with zero overhead by using private inheritance:
      *
@@ -75,6 +79,7 @@ namespace ub::usbd {
     };
 
     struct Function {
+#if UB_USBD_ENABLE_TYPE_IDENTIFIERS
         /**
          * Return a hardcoded function type identifier.
          *
@@ -87,6 +92,7 @@ namespace ub::usbd {
          *  3. Interpret first 4 bytes of the hash as a big-endian integer (0xDD1BEB43 for serial port example)
          */
         [[nodiscard]] virtual uint32_t functionType() const = 0;
+#endif
 
         /**
          * Reset function state and create function logic instance.

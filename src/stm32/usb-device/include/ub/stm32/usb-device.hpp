@@ -8,8 +8,8 @@
 
 #define UB_STM32_USBD_USB_DEVICE_INCLUDED
 
-#if defined(STM32G4)
-#include <ub/stm32/usbd/usb-device-g4.hpp>
+#if defined(STM32G4) || defined(STM32H5)
+#include <ub/stm32/usbd/usb-device-fs.hpp>
 #else
 #error "Unsupported STM32 device"
 #endif

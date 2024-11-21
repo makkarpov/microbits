@@ -96,10 +96,13 @@ namespace ub::usbd {
         [[nodiscard]] uint16_t controlSignals() const { return m_controlSignals; }
 
         /** Returns and resets a bitmask (see `EV_*` constants) of currently pending events  */
-        [[nodiscard]] uint32_t pullEvents();
+        uint32_t pullEvents();
 
         // Internal methods:
+#if UB_USBD_ENABLE_TYPE_IDENTIFIERS
         [[nodiscard]] uint32_t functionType() const override;
+#endif
+
         FunctionLogic* initialize(FunctionHost &host, THROWS) override;
 
         /** USB reset has been received from the host */

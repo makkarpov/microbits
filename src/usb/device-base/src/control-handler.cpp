@@ -1,6 +1,7 @@
-#include <ub/usbd/impl/static-descriptor.hpp>
-#include <ub/usbd/impl/control-std.hpp>
+#include <ub/usbd/static-config.hpp>
 #include <ub/usb-device.hpp>
+
+#include <ub/usbd/impl/control-std.hpp>
 
 #include <algorithm>
 #include <cstring>
@@ -120,7 +121,10 @@ void StandardControlHandler::setupControl(ControlRequest &request) {
         break;
 
     default:
+        // do nothing - request will be rejected by default
+#if UB_USBD_TRAP_UNKNOWN_CONTROL_REQUESTS
         asm volatile ("bkpt");
+#endif
         break;
     }
 }
@@ -165,13 +169,15 @@ void StandardControlHandler::setupGetDescriptor(ControlRequest &request) {
     switch (type) {
     case Descriptor::DEVICE:
         request.accepted = true;
-        m_streamer.byte.setRegularDescriptor(m_device->m_desc->deviceDescriptor);
+        m_streamer.byte.setRegularDescriptor(m_device->m_cfg->descriptors.deviceDescriptor);
         break;
 
-    case Descriptor::CONFIGURATION:
+    case Descriptor::CONFIGURATION: {
         request.accepted = true;
-        m_streamer.byte.setConfigDescriptor(m_device->m_desc->configDescriptor);
+        uint8_t speedIndex = linkSpeedIndex(request.endpoint->linkSpeed());
+        m_streamer.byte.setConfigDescriptor(m_device->m_cfg->descriptors.configDescriptor[speedIndex]);
         break;
+    }
 
     case Descriptor::STRING:
         setupStringDescriptor(request, index);
@@ -182,16 +188,20 @@ void StandardControlHandler::setupGetDescriptor(ControlRequest &request) {
         return;
 
     default:
+        // do nothing - request will be rejected by default
+#if UB_USBD_TRAP_UNKNOWN_CONTROL_REQUESTS
         asm volatile ("bkpt");
+#endif
         break;
     }
 }
 
 void StandardControlHandler::setupStringDescriptor(ControlRequest &request, uint8_t index) {
-    const descriptor::StringDescriptor *str = m_device->m_desc->strings;
-    size_t stringCount = m_device->m_desc->stringDescriptorCount;
+    const config::StringDescriptor *str = m_device->m_cfg->descriptors.strings;
+    size_t stringCount = m_device->m_cfg->descriptors.stringCount;
 
-    uint8_t serialIndex = m_device->m_desc->serialNumberString;
+#if UB_USBD_RUNTIME_SERIAL_NUMBER
+    uint8_t serialIndex = m_device->m_cfg->descriptors.serialNumberIndex;
     if (serialIndex != 0 && index == serialIndex) {
         request.accepted = true;
 
@@ -204,15 +214,15 @@ void StandardControlHandler::setupStringDescriptor(ControlRequest &request, uint
 
         return;
     }
+#endif
 
-    // TODO - binary search
     for (size_t i = 0; i < stringCount; i++) {
         if (str[i].index != index) {
             continue;
         }
 
         request.accepted = true;
-        m_streamer.byte.setRegularDescriptor(str[i].ptr);
+        m_streamer.byte.setRegularDescriptor(str[i].data);
         return;
     }
 }
@@ -236,8 +246,9 @@ void StandardControlHandler::handleDefaultControl(const SetupPacket &setup, uint
 
     if (req == SetupReq::SET_CONFIGURATION) {
         using CS = USBDevice::CfgState;
+        uint8_t config = setup.wValue; // lower byte only, upper byte is reserved
 
-        if (setup.wValue != 0) {
+        if (config != 0) {
             if (m_device->m_configured == CS::RESET) {
                 m_device->setConfigured(CHECK);
             }

@@ -9,3 +9,5 @@ target_link_libraries(ub_usbd_serial INTERFACE UB::Utilities UB::USBD::Base)
 
 file(REAL_PATH "tools/descriptor.py" DESCRIPTOR_LIB)
 set_target_properties(ub_usbd_serial PROPERTIES UB_USBD_DESCRIPTOR_LIB "${DESCRIPTOR_LIB}")
+
+ub_install_library(UB::USBD::Serial)

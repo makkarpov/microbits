@@ -7,7 +7,5 @@ target_sources(ub_usbd_base INTERFACE ${SOURCES})
 target_include_directories(ub_usbd_base INTERFACE include)
 target_link_libraries(ub_usbd_base INTERFACE UB::Utilities)
 
-file(REAL_PATH "tools/descriptor.py" DESCRIPTOR_GEN)
-set_target_properties(ub_usbd_base PROPERTIES UB_USBD_DESCRIPTOR_GEN "${DESCRIPTOR_GEN}")
-
-include(tools/descriptor.cmake)
+ub_install_library(UB::USBD::Base EXTRA_CMAKE_LISTS descriptors.cmake)
+include(descriptors.cmake)

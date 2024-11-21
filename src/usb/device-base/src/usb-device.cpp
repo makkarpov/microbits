@@ -5,28 +5,32 @@
 using namespace ub::usbd;
 
 void USBDevice::registerFunction(Function &fn) {
-    if (m_funcIdx == UB_USBD_MAX_FUNCTIONS) {
+    if (m_nextFunctionIdx == UB_USBD_MAX_FUNCTIONS) {
         return;
     }
 
-    m_func[m_funcIdx] = &fn;
-    m_funcIdx++;
+    m_funcs[m_nextFunctionIdx].func = &fn;
+    m_nextFunctionIdx++;
 }
 
-void USBDevice::initialize(PeripheralController &peripheral, const StaticDescriptor &descriptor, THROWS) {
+void USBDevice::initialize(PeripheralController &peripheral, const StaticConfig &config, THROWS) {
     m_pcd = &peripheral;
-    m_desc = &descriptor;
+    m_cfg = &config;
 
-    if (m_funcIdx != descriptor.functionCount) {
+    if (m_nextFunctionIdx != config.functionCount) {
         THROW(usbError, E_FUNCTION_MISMATCH);
     }
 
-    for (size_t i = 0; i < m_funcIdx; i++) {
-        if (m_func[i]->functionType() != m_desc->functions[i].functionType) {
+    for (size_t i = 0; i < m_nextFunctionIdx; i++) {
+        auto &f = m_funcs[i];
+
+#if UB_USBD_ENABLE_TYPE_IDENTIFIERS
+        if (f.func->functionType() != m_cfg->functions[i].functionTypeId) {
             THROW(usbError, E_FUNCTION_MISMATCH);
         }
+#endif
 
-        m_funcHosts[i].dev = this;
+        f.dev = this;
     }
 
     m_pcd->initialize(CHECK);
@@ -72,6 +76,10 @@ uint32_t USBDevice::processEvents() {
 void USBDevice::processReset(LinkSpeed speed) {
     m_control.reset(speed);
     m_configured = CfgState::RESET;
+
+#if UB_USBD_HAVE_RESOURCE_MAPPING
+    m_activeMapping = &m_cfg->mapping[impl::linkSpeedIndex(speed)];
+#endif
 }
 
 void USBDevice::processPacketReceived(const PeripheralEvent::RxPacket &ev) {
@@ -81,10 +89,10 @@ void USBDevice::processPacketReceived(const PeripheralEvent::RxPacket &ev) {
     }
 
 #if UB_USBD_HAVE_DATA_ENDPOINTS
-    auto logical = impl::toLogicalEndpoint(ev.addr, m_desc->endpointMapping);
+    auto logical = impl::toLogicalEndpoint(ev.addr, *m_activeMapping);
 
     if (logical) {
-        m_funcLogic[logical.function()]->packetReceived(logical.value(), ev.size);
+        m_funcs[logical.function()].logic->packetReceived(logical.value(), ev.size);
     }
 #endif
 }
@@ -96,10 +104,10 @@ void USBDevice::processTransmitComplete(uint8_t endpoint) {
     }
 
 #if UB_USBD_HAVE_DATA_ENDPOINTS
-    auto logical = impl::toLogicalEndpoint(endpoint, m_desc->endpointMapping);
+    auto logical = impl::toLogicalEndpoint(endpoint, *m_activeMapping);
 
     if (logical) {
-        m_funcLogic[logical.function()]->transmitComplete(logical.value());
+        m_funcs[logical.function()].logic->transmitComplete(logical.value());
     }
 #endif
 }
@@ -119,10 +127,12 @@ ControlHandler *USBDevice::resolveControl(ControlRequest &req, SetupPacket &setu
 
     if (setup.recipient() == SetupRecipient::DEVICE) {
 #if UB_USBD_HAVE_DATA_ENDPOINTS
-        for (size_t i = 0; i < m_funcIdx; i++) {
-            m_funcLogic[i]->setupControl(req);
+        for (size_t i = 0; i < m_nextFunctionIdx; i++) {
+            auto logic = m_funcs[i].logic;
+
+            logic->setupControl(req);
             if (req.accepted) {
-                return m_funcLogic[i];
+                return logic;
             }
 
             req.reset();
@@ -136,11 +146,11 @@ ControlHandler *USBDevice::resolveControl(ControlRequest &req, SetupPacket &setu
 
     if (setup.recipient() == SetupRecipient::ENDPOINT) {
 #if UB_USBD_HAVE_DATA_ENDPOINTS
-        auto logical = impl::toLogicalEndpoint(req.setup->wIndex, m_desc->endpointMapping);
+        auto logical = impl::toLogicalEndpoint(req.setup->wIndex, *m_activeMapping);
 
         if (logical) {
             setup.wIndex = logical.value();
-            return m_funcLogic[logical.function()];
+            return m_funcs[logical.function()].logic;
         }
 #endif
 
@@ -149,11 +159,11 @@ ControlHandler *USBDevice::resolveControl(ControlRequest &req, SetupPacket &setu
 
     if (setup.recipient() == SetupRecipient::INTERFACE) {
 #if UB_USBD_HAVE_DATA_ENDPOINTS
-        auto logical = impl::toLogicalInterface(req.setup->wIndex, m_desc->endpointMapping);
+        auto logical = impl::toLogicalInterface(req.setup->wIndex, *m_activeMapping);
 
         if (logical) {
             setup.wIndex = logical.value();
-            return m_funcLogic[logical.function()];
+            return m_funcs[logical.function()].logic;
         }
 
         return nullptr;
@@ -166,14 +176,11 @@ ControlHandler *USBDevice::resolveControl(ControlRequest &req, SetupPacket &setu
 }
 
 void USBDevice::setConfigured(THROWS) {
-#if UB_USBD_HAVE_DATA_ENDPOINTS
-    for (size_t i = 0; i < m_desc->endpointCount; i++) {
-        m_pcd->openEndpoint(m_desc->endpoints[i], CHECK);
-    }
-#endif
+    m_pcd->configureDevice(m_cfg->targetData, impl::linkSpeedIndex(m_control.m_speed), CHECK);
 
-    for (size_t i = 0; i < m_funcIdx; i++) {
-        m_funcLogic[i] = m_func[i]->initialize(m_funcHosts[i], CHECK);
+    for (size_t i = 0; i < m_nextFunctionIdx; i++) {
+        FnHostImpl &f = m_funcs[i];
+        f.logic = f.func->initialize(f, CHECK);
     }
 }
 
@@ -187,9 +194,9 @@ bool USBDevice::validateEndpoint(uint32_t endpoint) {
     }
 
 #if UB_USBD_HAVE_DATA_ENDPOINTS
-    return (bool) impl::toLogicalEndpoint(endpoint, m_desc->endpointMapping);
+    return (bool) impl::toLogicalEndpoint(endpoint, *m_activeMapping);
 #else
-    return false; // control endpoint is already covered, no data endpoints present
+    return false; // control endpoint is already covered, no data endpoints are present
 #endif
 }
 
@@ -198,22 +205,25 @@ LinkSpeed USBDevice::FnHostImpl::linkSpeed() const {
 }
 
 void USBDevice::FnHostImpl::stallEndpoint(uint8_t endpoint, bool stall) {
-    uint8_t physical = impl::toPhysicalEndpoint(endpoint, functionDesc());
-    // TODO - check validity
-    dev->m_pcd->stallEndpoint(physical, stall);
+    dev->m_pcd->stallEndpoint(toPhysicalEndpoint(endpoint), stall);
 }
 
 bool USBDevice::FnHostImpl::stalled(uint8_t endpoint) {
-    uint8_t physical = impl::toPhysicalEndpoint(endpoint, functionDesc());
-    return dev->m_pcd->stalled(physical);
+    return dev->m_pcd->stalled(toPhysicalEndpoint(endpoint));
 }
 
 void USBDevice::FnHostImpl::receivePacket(uint8_t endpoint, void *buffer) {
-    uint8_t physical = impl::toPhysicalEndpoint(endpoint, functionDesc());
-    dev->m_pcd->receivePacket(physical, buffer);
+    dev->m_pcd->receivePacket(toPhysicalEndpoint(endpoint), buffer);
 }
 
 void USBDevice::FnHostImpl::transmitPacket(uint8_t endpoint, const void *buffer, uint32_t length) {
-    uint8_t physical = impl::toPhysicalEndpoint(endpoint, functionDesc());
-    dev->m_pcd->transmitPacket(physical, buffer, length);
+    dev->m_pcd->transmitPacket(toPhysicalEndpoint(endpoint), buffer, length);
+}
+
+uint8_t USBDevice::FnHostImpl::toPhysicalEndpoint(uint8_t endpoint) const {
+#if UB_USBD_HAVE_RESOURCE_MAPPING
+    return impl::toPhysicalEndpoint(functionIdx(), endpoint, *dev->m_activeMapping);
+#else
+    return endpoint;
+#endif
 }

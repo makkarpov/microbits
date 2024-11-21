@@ -2,7 +2,7 @@
 #define UB_USB_DEVICE_BASE_USBD_IMPL_CONTROL_STD_H
 
 #include <ub/usbd/control.hpp>
-#include <ub/usbd/impl/static-descriptor.hpp>
+#include <ub/usbd/static-config.hpp>
 
 namespace ub::usbd {
     class USBDevice;
@@ -49,7 +49,7 @@ namespace ub::usbd::impl {
         enum class ControlFunc: uint8_t {
             DEFAULT     = 0,    //! As specified in setup request
             SET_ADDRESS = 1,    //! Address assignment
-            SET_STALL   = 2,    //! Set or clear value stall
+            SET_STALL   = 2,    //! Set or clear endpoint stall
             GET_STATUS  = 3,    //! Query status
         };
 
@@ -58,7 +58,10 @@ namespace ub::usbd::impl {
 
         union {
             ByteStreamer    byte;
+
+#if UB_USBD_RUNTIME_SERIAL_NUMBER
             StringStreamer  str;
+#endif
         } m_streamer;
 
         void setupGetDescriptor(ControlRequest &request);

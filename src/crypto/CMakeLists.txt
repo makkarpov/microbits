@@ -6,6 +6,8 @@ add_library(UB::Crypto ALIAS ub_crypto)
 target_sources(ub_crypto INTERFACE ${SOURCES})
 target_include_directories(ub_crypto INTERFACE include)
 
+ub_install_library(UB::Crypto)
+
 if ("${ENABLE_TESTING}")
     set(GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/test-generated")
 
@@ -36,7 +38,7 @@ if ("${ENABLE_TESTING}")
         string(REGEX REPLACE "[^a-z_0-9]+" "_" NAME "${NAME}")
         string(PREPEND NAME "test_crypto_")
 
-        add_executable("${NAME}" "${CMAKE_CURRENT_SOURCE_DIR}/test/${FILE}")
+        add_executable("${NAME}" EXCLUDE_FROM_ALL "${CMAKE_CURRENT_SOURCE_DIR}/test/${FILE}")
 
         foreach (F IN LISTS ARGN)
             file(REAL_PATH "${F}" AF BASE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/test")
