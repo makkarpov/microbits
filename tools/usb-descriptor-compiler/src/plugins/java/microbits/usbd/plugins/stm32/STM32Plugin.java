@@ -34,6 +34,16 @@ public class STM32Plugin implements CompilerPlugin {
             )
             .build();
 
+    public static final TargetProperties STM32H5 = TargetProperties.builder()
+            .name("STM32H5xx")
+            .inEndpoints(8)
+            .outEndpoints(8)
+            .targetFeatures(
+                    TargetFeature.IN_OUT_SAME_TYPE, TargetFeature.DOUBLE_BUF_UNIDIRECTIONAL,
+                    TargetFeature.DOUBLE_BUF_EXPLICIT
+            )
+            .build();
+
     public static final TargetProperties STM32U5_FS = TargetProperties.builder()
             .name("STM32U5xx/FS")
             .inEndpoints(6)
@@ -49,6 +59,7 @@ public class STM32Plugin implements CompilerPlugin {
 
     public static final Map<String, TargetProperties> TARGETS = Map.of(
             "stm32g4",      STM32G4,
+            "stm32h5",      STM32H5,
             "stm32u5",      STM32U5_FS,
             "stm32u5-fs",   STM32U5_FS,
             "stm32u5-hs",   STM32U5_HS
