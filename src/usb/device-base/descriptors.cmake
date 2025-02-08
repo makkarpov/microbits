@@ -17,14 +17,15 @@ function(ub_usbd_generate_descriptor TARGET SPECIFICATION)
     set(generated_file "${CMAKE_CURRENT_BINARY_DIR}/${specification_basename}.cpp")
     get_property(compiler_plugins GLOBAL PROPERTY UB_USB_DESCRIPTOR_COMPILER_PLUGINS)
 
+    set(compiler_plugins_prefix "")
     if (NOT ("${compiler_plugins}" STREQUAL ""))
         list(JOIN compiler_plugins ":" compiler_plugins)
-        list(PREPEND compiler_plugins "--plugins")
+        set(compiler_plugins_prefix "--plugins")
     endif ()
 
     add_custom_command(
             OUTPUT "${generated_file}"
-            COMMAND java -jar "${compiler_jar}" "${compiler_plugins}"
+            COMMAND java -jar "${compiler_jar}" "${compiler_plugins_prefix}" "${compiler_plugins}"
                 --specification "${SPECIFICATION}"
                 --out "${generated_file}"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
