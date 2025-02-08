@@ -28,6 +28,8 @@ set(CMAKE_SYSROOT               "${DEV_TOOLCHAIN_PATH}/${TARGET_TRIPLET}")
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 
+add_custom_target(all_device_tests)
+
 function(configure_device_executable TARGET)
     target_compile_options("${TARGET}" PRIVATE
             "-mthumb" "-mcpu=cortex-m33" "-fno-unwind-tables" "-ffunction-sections" "-fdata-sections"
@@ -105,6 +107,8 @@ function(add_device_test)
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     )
 
+    add_dependencies(all_device_tests "${TGT_NAME}")
+
     add_test(
             NAME "${DT_NAME}"
             COMMAND ${DT_PYTHON_COMMAND}
@@ -116,11 +120,12 @@ function(dt_setup_all_tests)
     dt_setup_vars()
 
     add_custom_target(
-            "xtest"
+            "test_aggregated"
             WORKING_DIRECTORY "${UB_BINARY_DIR}"
+            DEPENDS all_device_tests
             COMMAND "${CMAKE_COMMAND}" -E env
-            "PYTHONPATH=${DT_PYTHON_LIB}"
-            python3 -B "${DT_PYTHON_LIB}/devtest/aggregator.py"
+                "PYTHONPATH=${DT_PYTHON_LIB}"
+                python3 -B "${DT_PYTHON_LIB}/devtest/aggregator.py"
     )
 endfunction()
 

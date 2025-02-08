@@ -1,5 +1,6 @@
 import asyncio
 import os
+import sys
 from typing import Union, Optional
 
 from debug_link import DebugLink
@@ -151,6 +152,8 @@ class DeviceTestApp:
         if _au.ENV_AGGREGATOR_PORT in os.environ:
             self._aggregator = _AggregatorConnection()
             await self._aggregator.setup()
+        else:
+            self._aggregator = None
 
         result = None
         failure = None
@@ -170,6 +173,9 @@ class DeviceTestApp:
             )
 
             await self._aggregator.write_result(result_msg)
+        elif failure is not None:
+            print(failure, file=sys.stderr)
+            sys.exit(1)
 
     async def _run_test(self) -> _am.TestResult:
         self.link = DebugLink()
