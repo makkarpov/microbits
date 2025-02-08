@@ -14,20 +14,32 @@ Small collection of cryptographic primitives, optimized mostly for minimal code 
 
 # Resource usage
 
-| Test                         | Code | Stack |  Cycles   | Time  |
-|:-----------------------------|:----:|:-----:|:---------:|:-----:|
-| crypto_eddsa_verify_25519_Os | 4760 | 1560  | 19019006  | 0.594 |
-| crypto_eddsa_verify_448_Os   | 3756 | 1800  | 175376277 | 5.48  |
-| crypto_eddsa_sign_25519_Os   | 4624 | 1592  | 10714407  | 0.334 |
-| crypto_eddsa_sign_448_Os     | 4200 | 1816  | 94652549  | 2.957 |
-| crypto_eddh_25519_Os         | 1264 |  496  |  5980474  | 0.186 |
-| crypto_eddh_448_Os           | 1380 |  896  | 45028704  | 1.407 |
-| crypto_sha2_sha256_Os        | 1036 |  472  |   77130   | 0.002 |
-| crypto_sha2_sha512_Os        | 2040 | 1032  |  149851   | 0.004 |
-| crypto_sha3_shake256_Os      | 1016 |  360  |  712751   | 0.022 |
-| crypto_sha3_sha256_Os        | 960  |  352  |  625282   | 0.019 |
-| crypto_aes_Os                | 1312 |  368  |  984074   | 0.03  |
-| crypto_chacha20_Os           | 564  |  224  |   73317   | 0.002 |
+| Test               | Opt | Code | Stack |  Cycles   | Time  |
+|:-------------------|-----|:----:|:-----:|:---------:|:-----:|
+| eddsa_verify_25519 | -Os | 4728 | 1560  | 18080915  | 0.565 |
+| eddsa_verify_25519 | -O2 | 5440 | 1560  | 17111902  | 0.534 |
+| eddsa_verify_448   | -Os | 3804 | 1784  | 162999144 | 5.093 |
+| eddsa_verify_448   | -O2 | 4488 | 1824  | 141671579 | 4.427 |
+| eddsa_sign_25519   | -Os | 4592 | 1592  | 10215362  | 0.319 |
+| eddsa_sign_25519   | -O2 | 5352 | 1584  |  9684501  | 0.302 |
+| eddsa_sign_448     | -Os | 4248 | 1800  | 88096565  | 2.753 |
+| eddsa_sign_448     | -O2 | 5096 | 1832  | 77147226  | 2.410 |
+| eddh_25519         | -Os | 1248 |  496  |  5555543  | 0.173 |
+| eddh_25519         | -O2 | 1568 |  520  |  5293259  | 0.165 |
+| eddh_448           | -Os | 1360 |  888  | 41670564  | 1.302 |
+| eddh_448           | -O2 | 1752 |  920  | 36656370  | 1.145 |
+| sha2_sha256        | -Os | 1036 |  472  |   76218   | 0.002 |
+| sha2_sha256        | -O2 | 1124 |  472  |   70438   | 0.002 |
+| sha2_sha512        | -Os | 2040 | 1032  |  148876   | 0.004 |
+| sha2_sha512        | -O2 | 2192 | 1024  |  134750   | 0.004 |
+| sha3_shake256      | -Os | 1100 |  352  |  701393   | 0.021 |
+| sha3_shake256      | -O2 | 1216 |  360  |  592023   | 0.018 |
+| sha3_sha256        | -Os | 960  |  352  |  625485   | 0.019 |
+| sha3_sha256        | -O2 | 1040 |  360  |  527369   | 0.016 |
+| aes                | -Os | 1312 |  368  |  983957   | 0.030 |
+| aes                | -O2 | 1464 |  384  |  871050   | 0.027 |
+| chacha20           | -Os | 564  |  224  |   73317   | 0.002 |
+| chacha20           | -O2 | 636  |  216  |   63841   | 0.001 |
 
 * Measurements were taken on STM32H563ZI (Cortex-M33) chip running at default frequency of 32 MHz.
 * Hashes and ciphers are measured with 1024-byte payloads

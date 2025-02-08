@@ -95,94 +95,108 @@ if ("${ENABLE_TESTING}")
 endif ()
 
 if ("${ENABLE_DEVICE_TESTING}")
-    set(COMMON_ARGS "LIBRARIES;ub_crypto;CC_FLAGS;-Os;-Wall;-Wextra")
+    function(add_crypto_device_test NAME)
+        add_device_test(
+                NAME        crypto_${NAME}_Os
+                LIBRARIES   ub_crypto
+                CC_FLAGS    -Os -Wall -Wextra
+                ${ARGN}
+        )
 
-    add_device_test(
-            NAME        crypto_eddsa_verify_25519_Os
+        add_device_test(
+                NAME        crypto_${NAME}_O2
+                LIBRARIES   ub_crypto
+                CC_FLAGS    -O2 -Wall -Wextra
+                ${ARGN}
+        )
+    endfunction()
+
+    add_crypto_device_test(
+            eddsa_verify_25519
+
             SOURCES     test/device/eddsa_verify.cpp
             RUNNER      test/device/eddsa_runner.py verify 25519
-            ${COMMON_ARGS}
     )
 
-    add_device_test(
-            NAME        crypto_eddsa_verify_448_Os
+    add_crypto_device_test(
+            eddsa_verify_448
+
             SOURCES     test/device/eddsa_verify.cpp
             RUNNER      test/device/eddsa_runner.py verify 448
             DEFINES     TEST_ED448=1
-            ${COMMON_ARGS}
     )
 
-    add_device_test(
-            NAME        crypto_eddsa_sign_25519_Os
+    add_crypto_device_test(
+            eddsa_sign_25519
+
             SOURCES     test/device/eddsa_sign.cpp
             RUNNER      test/device/eddsa_runner.py sign 25519
-            ${COMMON_ARGS}
     )
 
-    add_device_test(
-            NAME        crypto_eddsa_sign_448_Os
+    add_crypto_device_test(
+            eddsa_sign_448
+
             SOURCES     test/device/eddsa_sign.cpp
             RUNNER      test/device/eddsa_runner.py sign 448
             DEFINES     TEST_ED448=1
-            ${COMMON_ARGS}
     )
 
-    add_device_test(
-            NAME        crypto_eddh_25519_Os
+    add_crypto_device_test(
+            eddh_25519
+
             SOURCES     test/device/eddh.cpp
             RUNNER      test/device/eddh_runner.py 25519
-            ${COMMON_ARGS}
     )
 
-    add_device_test(
-            NAME        crypto_eddh_448_Os
+    add_crypto_device_test(
+            eddh_448
+
             SOURCES     test/device/eddh.cpp
             RUNNER      test/device/eddh_runner.py 448
             DEFINES     TEST_ED448=1
-            ${COMMON_ARGS}
     )
 
-    add_device_test(
-            NAME        crypto_sha2_sha256_Os
+    add_crypto_device_test(
+            sha2_sha256
+
             SOURCES     test/device/sha2_sha256.cpp
             RUNNER      test/device/hash_runner.py sha256
-            ${COMMON_ARGS}
     )
 
-    add_device_test(
-            NAME        crypto_sha2_sha512_Os
+    add_crypto_device_test(
+            sha2_sha512
+
             SOURCES     test/device/sha2_sha512.cpp
             RUNNER      test/device/hash_runner.py sha512
-            ${COMMON_ARGS}
     )
 
-    add_device_test(
-            NAME        crypto_sha3_shake256_Os
+    add_crypto_device_test(
+            sha3_shake256
+
             SOURCES     test/device/sha3_shake256.cpp
             RUNNER      test/device/hash_runner.py shake_256
-            ${COMMON_ARGS}
     )
 
-    add_device_test(
-            NAME        crypto_sha3_sha256_Os
+    add_crypto_device_test(
+            sha3_sha256
+
             SOURCES     test/device/sha3_sha256.cpp
             RUNNER      test/device/hash_runner.py sha3_256
-            ${COMMON_ARGS}
     )
 
-    add_device_test(
-            NAME        crypto_aes_Os
+    add_crypto_device_test(
+            aes
+
             SOURCES     test/device/cipher.cpp
             RUNNER      test/device/cipher_runner.py aes
             DEFINES     TEST_AES=1
-            ${COMMON_ARGS}
     )
 
-    add_device_test(
-            NAME        crypto_chacha20_Os
+    add_crypto_device_test(
+            chacha20
+
             SOURCES     test/device/cipher.cpp
             RUNNER      test/device/cipher_runner.py chacha20
             DEFINES     TEST_CHACHA20=1
-            ${COMMON_ARGS}
     )
 endif ()
