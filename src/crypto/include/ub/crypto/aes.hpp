@@ -35,7 +35,7 @@ namespace ub::crypto {
     private:
         constexpr static size_t WORD = 4;
         constexpr static size_t MAX_ROUNDS = 14;
-        static uint8_t sBox[UINT8_MAX + 1];
+        static const uint8_t sBox[UINT8_MAX + 1];
 
         uint8_t Rk[(aes::MAX_ROUNDS + 1) * aes::BLOCK];     //! AES expanded round key
         uint8_t Nr;                                         //! Number of AES rounds
